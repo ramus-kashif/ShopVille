@@ -1,41 +1,41 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { GetSingleCategory, updateCategory } from "@/store/features/categories/categoriesSlice";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
 function UpdateCategory() {
   const [catName, setCatName] = useState({});
   const dispatch = useDispatch();
   const { slug } = useParams();
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // dispatch(UpdateCategory(inputValues))
-    //   .unwrap()
-    //   .then((response) => {
-    //     if (response?.success == true) {
-    //       toast.success(response?.message, { autoClose: 2000 });
-    //       setInputValues({});
-    //       dispatch(getAllCategories());
-    //     } else {
-    //       toast.error(response?.message, { autoClose: 2000 });
-    //     }
-    //   })
-    //   .catch((error) => {
-    //     toast.error(error, { autoClose: 2000 });
-    //   });
-
-    
-  };
-  useEffect(() => {
-    dispatch(getSingleCategory(slug))
+    dispatch(updateCategory({name: catName, slug}))
       .unwrap()
       .then((response) => {
         if (response?.success == true) {
           toast.success(response?.message, { autoClose: 2000 });
+          navigate("/admin/categories");
+        } else {
+          toast.error(response?.message, { autoClose: 2000 });
+        }
+      })
+      .catch((error) => {
+        toast.error(error, { autoClose: 2000 });
+      });
+
+    
+  };
+  useEffect(() => {
+    dispatch(GetSingleCategory(slug))
+      .unwrap()
+      .then((response) => {
+        if (response?.success == true) {
           setCatName(response.category?.name);
         } else {
           toast.error(response?.message, { autoClose: 2000 });
