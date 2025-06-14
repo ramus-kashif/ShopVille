@@ -28,5 +28,6 @@ const uploadImageOnCloudinary = async (filePath,folderName) => {
     } catch (error) {
         throw new Error(error);
     }
+    
 }
 export { uploadImageOnCloudinary };
