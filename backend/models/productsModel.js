@@ -26,12 +26,14 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
     picture: {
-      type: String,
-      required: true,
-    },
-    public_id: {
-      type: String,
-      required: true,
+      secure_url: {
+        type: String,
+        required: true,
+      },
+      public_id: {
+        type: String,
+        required: true,
+      },
     },
   },
   { timestamps: true }

@@ -1,6 +1,7 @@
 import express from "express";
 import { isAdmin, isAuthorized } from "../middlewares/authMiddleware.js";
 import { addProductController } from "../controllers/productsController.js";
+import { upload } from "../middlewares/multerMiddleware.js";
 
 const productRouter = express.Router();
 
@@ -10,7 +11,7 @@ const productRouter = express.Router();
 
 // http://localhost:8080/api/v1/products/ - POST
 
-productRouter.post("/", isAuthorized, isAdmin, addProductController);
+productRouter.post("/", upload.single("picture"), isAuthorized, isAdmin, addProductController);
 
 // http://localhost:8080/api/v1/products/:slug - DELETE
 
