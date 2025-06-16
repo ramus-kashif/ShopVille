@@ -8,8 +8,8 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     //1aa6745d-1af5-421c-9612-cb130725463d.png
-    const newfilename = uuidv4() + path.extname(file.originalname);
-    cb(null, newfilename);
+    const newFileName = uuidv4() + path.extname(file.originalname);
+    cb(null, newFileName);
   },
 });
 

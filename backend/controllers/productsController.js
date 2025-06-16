@@ -4,7 +4,7 @@ import productsModel from "../models/productsModel.js";
 const addProductController = async (req, res) => {
   try {
     const { title, description, category, price } = req.body;
-    const picture = req.file.filename;
+    const picture = req.file.fieldname;
     const picturePath = req.file?.path;
 
     if (

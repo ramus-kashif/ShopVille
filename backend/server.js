@@ -28,14 +28,14 @@ app.use(cookieParser());
 
 import userRoutes from "./routes/userRoutes.js";
 import CategoriesRoutes from "./routes/CategoriesRoutes.js";
-import productRoutes from "./routes/productRoutes.js";
+import productsRoutes from "./routes/productsRoutes.js";
 
 // http://localhost:8080/
 // http://localhost:8080/api/v1/users
 
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/categories", CategoriesRoutes);
-app.use("/api/v1/products", productRoutes);
+app.use("/api/v1/products", productsRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

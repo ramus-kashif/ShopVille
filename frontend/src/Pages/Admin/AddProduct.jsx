@@ -26,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 function AddProduct() {
   const [inputValues, setInputValues] = useState({});
   const categories = useSelector((state) => state.categories.categories);
+  const productStatus = useSelector((state) => state.products.status);
   const status = useSelector((state) => state.categories.status);
   const error = useSelector((state) => state.categories.error);
   const dispatch = useDispatch();
@@ -47,12 +48,13 @@ function AddProduct() {
       .unwrap()
       .then((response) => {
         if (response?.success == true) {
-          toast.success(response?.message, { autoClose: 2000 });
+          toast.success(response?.message, { autoClose: 1500 });
+          // setInputValues({});
           setTimeout(() => {
-            navigate("/");
-          }, 2000);
+            navigate("/admin/products");
+          }, 1000);
         } else {
-          toast.error(response?.message, { autoClose: 2000 });
+          toast.error(response?.message, { autoClose: 1500 });
         }
       })
       .catch((error) => {
@@ -100,6 +102,7 @@ function AddProduct() {
                   placeholder="Enter product title"
                   required
                   name="title"
+                  type="text"
                   value={inputValues.title || ""}
                   onChange={handleChange}
                 />
@@ -112,6 +115,7 @@ function AddProduct() {
                     placeholder="Enter product price"
                     required
                     name="price"
+                    type="number"
                     value={inputValues.price || ""}
                     onChange={handleChange}
                   />
@@ -122,7 +126,7 @@ function AddProduct() {
                     <SelectTrigger className="">
                       <SelectValue placeholder="Select Category" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent >
                       {categories &&
                         categories.categories &&
                         categories.categories.map((category) => {
@@ -147,14 +151,14 @@ function AddProduct() {
                   type="file"
                   required
                   name="picture"
-                  onChange={(e) =>
+                  onChange={(e) =>{
                     handleChange({
                       target: {
                         name: "picture",
                         value: e.target.files[0],
                       },
                     })
-                  }
+                  }}
                 />
               </div>
               <div className="grid gap-2">
@@ -171,9 +175,9 @@ function AddProduct() {
               <Button
                 type="submit"
                 className="max-w-36"
-                disabled={status == "loading" ? true : false}
+                disabled={productStatus == "loading" ? true : false}
               >
-                {status == "loading" ? "Adding Product....." : "Add Product"}
+                {productStatus == "loading" ? "Adding Product....." : "Add Product"}
               </Button>
             </div>
           </form>
