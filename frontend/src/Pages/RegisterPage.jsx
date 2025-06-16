@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import React, { useState } from "react"; // Import useState
+import { useState } from "react"; // Import useState
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { register } from "@/store/features/auth/authSlice";
