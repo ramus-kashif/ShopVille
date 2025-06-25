@@ -11,7 +11,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllProducts } from "@/store/features/products/productSlice";
+import {
+  deleteProduct,
+  getAllProducts,
+} from "@/store/features/products/productSlice";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +24,7 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 import moment from "moment";
+import { toast } from "react-toastify";
 
 function Products() {
   const products = useSelector((state) => state.products.products);
@@ -34,6 +38,22 @@ function Products() {
     axios;
     dispatch(getAllProducts()); //get all products function
   }, [dispatch]);
+
+  const handleDelete = (productId) => {
+    dispatch(deleteProduct(productId))
+      .unwrap()
+      .then((response) => {
+        if (response?.success == true) {
+          toast.success(response?.message, { autoClose: 2000 });
+          dispatch(getAllProducts());
+        } else {
+          toast.error(response?.message, { autoClose: 2000 });
+        }
+      })
+      .catch((error) => {
+        toast.error(error, { autoClose: 2000 });
+      });
+  };
 
   if (status == "loading") {
     return (
@@ -80,8 +100,10 @@ function Products() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {products && Array.isArray(products.product) && products.product.length > 0 ? (
-            products.product.map((product, index) => (
+          {products &&
+          Array.isArray(products.products) &&
+          products.products.length > 0 ? (
+            products.products.map((product, index) => (
               <TableRow key={product._id}>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>
@@ -107,10 +129,22 @@ function Products() {
                         <MoreHorizontal className="w-4 h-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem>Delete</DropdownMenuItem>
+                    <DropdownMenuContent className="p-2 rounded-lg shadow-lg min-w-[140px] bg-white dark:bg-gray-900">
+                      <DropdownMenuLabel className="text-gray-500 dark:text-gray-400 px-2 pb-1">
+                        Actions
+                      </DropdownMenuLabel>
+                      <DropdownMenuItem className="px-2 py-2 rounded-md cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900 hover:text-blue-700 transition">
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="px-2 py-2 rounded-md cursor-pointer hover:bg-red-100 dark:hover:bg-red-900 text-red-600 hover:text-red-800 transition">
+                        <button
+                          onClick={() => {
+                            handleDelete(product._id);
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

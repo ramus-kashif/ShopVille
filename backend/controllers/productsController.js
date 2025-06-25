@@ -1,4 +1,7 @@
-import { uploadImageOnCloudinary } from "../helper/cloudinaryHelper.js";
+import {
+  deleteImageFromCloudinary,
+  uploadImageOnCloudinary,
+} from "../helper/cloudinaryHelper.js";
 import productsModel from "../models/productsModel.js";
 
 const addProductController = async (req, res) => {
@@ -32,7 +35,7 @@ const addProductController = async (req, res) => {
         error: secure_url,
       });
     }
-    const product = await productsModel.create({
+    const products = await productsModel.create({
       title,
       description,
       category,
@@ -44,7 +47,7 @@ const addProductController = async (req, res) => {
     return res.status(201).send({
       success: true,
       message: "Product added successfully",
-      product,
+      products,
     });
   } catch (error) {
     console.log(`addProductController Error ${error}`);
@@ -55,15 +58,48 @@ const addProductController = async (req, res) => {
     });
   }
 };
-const getAllProductsController = async (req, res) => {
+const deleteProductController = async (req, res) => {
   try {
-    const product = await productsModel.find({}).populate("user", "name").populate("category", "name");
+    const { productId } = req.params;
+    const product = await productsModel.findById(productId);
+    if (!product) {
+      return res.status(404).send({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    // Deleting image from cloudinary
+    if (product.picture && product.picture.public_id) {
+      await deleteImageFromCloudinary(product.picture.public_id);
+    }
+    
+    await productsModel.findByIdAndDelete(productId)
+    return res.status(200).send({
+      success: true,
+      message: "Product deleted successfully",
+    });
+  } catch (error) {
+    console.log(`getAllProductsController Error ${error}`);
+    return res.status(400).send({
+      success: false,
+      message: "Error in deleteAllProductController",
+      error,
+    });
+  }
+};
+const getAllProductsController = async (_req, res) => {
+  try {
+    const products = await productsModel
+      .find({})
+      .populate("user", "name")
+      .populate("category", "name");
 
     return res.status(200).send({
       success: true,
-      total: product.length,
+      total: products.length,
       message: "All Products fetched successfully",
-      product,
+      products,
     });
   } catch (error) {
     console.log(`getAllProductsController Error ${error}`);
@@ -75,4 +111,8 @@ const getAllProductsController = async (req, res) => {
   }
 };
 
-export { getAllProductsController,addProductController };
+export {
+  getAllProductsController,
+  addProductController,
+  deleteProductController,
+};

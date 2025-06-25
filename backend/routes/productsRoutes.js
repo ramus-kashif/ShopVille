@@ -1,6 +1,6 @@
 import express from "express";
 import { isAdmin, isAuthorized } from "../middlewares/authMiddleware.js";
-import { addProductController, getAllProductsController } from "../controllers/productsController.js";
+import { addProductController, deleteProductController, getAllProductsController } from "../controllers/productsController.js";
 import { upload } from "../middlewares/multerMiddleware.js";
 
 const productRouter = express.Router();
@@ -14,7 +14,8 @@ productRouter.get("/", getAllProductsController);
 
 productRouter.post("/", upload.single("picture"), isAuthorized, isAdmin, addProductController);
 
-// http://localhost:8080/api/v1/products/:slug - DELETE
+// http://localhost:8080/api/v1/products/:productId - DELETE
+productRouter.delete("/:productId", isAuthorized, isAdmin, deleteProductController);
 
 // http://localhost:8080/api/v1/products/:slug - GET
 

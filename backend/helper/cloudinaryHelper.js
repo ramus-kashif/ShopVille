@@ -30,4 +30,15 @@ const uploadImageOnCloudinary = async (filePath,folderName) => {
     }
     
 }
-export { uploadImageOnCloudinary };
+
+const deleteImageFromCloudinary = async (public_id) => {
+try {
+    const result = await cloudinary.uploader.destroy(public_id);
+    return result;
+    
+} catch (error) {
+    throw new Error(error);
+}
+}
+
+export { uploadImageOnCloudinary, deleteImageFromCloudinary };
