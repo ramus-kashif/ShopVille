@@ -55,5 +55,24 @@ const addProductController = async (req, res) => {
     });
   }
 };
+const getAllProductsController = async (req, res) => {
+  try {
+    const product = await productsModel.find({}).populate("user", "name").populate("category", "name");
 
-export { addProductController };
+    return res.status(200).send({
+      success: true,
+      total: product.length,
+      message: "All Products fetched successfully",
+      product,
+    });
+  } catch (error) {
+    console.log(`getAllProductsController Error ${error}`);
+    return res.status(400).send({
+      success: false,
+      message: "Error in getAllProductsController",
+      error,
+    });
+  }
+};
+
+export { getAllProductsController,addProductController };

@@ -29,7 +29,7 @@ export const login = createAsyncThunk(
 export const logout = createAsyncThunk("auth/logout", async (thunkAPI) => {
   try {
     const response = await authService.logoutUser();
-    window.localStorage.setItem("user", JSON.stringify(response));
+    window.localStorage.removeItem("user"); // Remove user from localStorage on logout
     return response;
   } catch (error) {
     return thunkAPI.rejectWithValue(error);

@@ -16,34 +16,56 @@ import Profile from "./Pages/Profile";
 import Categories from "./Pages/Admin/Categories";
 import UpdateCategory from "./Pages/Admin/UpdateCategory";
 import AddProduct from "./Pages/Admin/addProduct";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith("/admin");
   return (
     <>
-      {!isAdmin && <Navbar/>}
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/login" element={<LoginPage />} />
+      {!isAdmin && <Navbar />}
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/about" element={<About />} />
+        <Route path="/shop" element={<Shop />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={<LoginPage />} />
 
-          {/* Admin Routes */}
-          <Route path="/admin" element={<DashboardLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="users" element={<Users />} />
-            <Route path="products" element={<Products />} />
-            <Route path="products/add" element={<AddProduct />} />
-            <Route path="categories" element={<Categories />} />
-            <Route path="categories/update/:slug" element={<UpdateCategory />} />
-            <Route path="orders" element={<Orders />} />
-          </Route>
-        </Routes>
-        <ToastContainer />
+        {/* Admin Routes */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Dashboard />} />
+          <Route path="users" element={<Users />} />
+          <Route path="products" element={<Products />} />
+          <Route path="products/add" element={<AddProduct />} />
+          <Route path="categories" element={<Categories />} />
+          <Route path="categories/update/:slug" element={<UpdateCategory />} />
+          <Route path="orders" element={<Orders />} />
+        </Route>
+      </Routes>
+      <ToastContainer />
     </>
   );
 }

@@ -4,6 +4,8 @@ import {
   loginController,
   logoutController,
   registerController,
+  updateUserController,
+  deleteUserController,
 } from "../controllers/userController.js";
 import { isAdmin, isAuthorized } from "../middlewares/authMiddleware.js";
 
@@ -14,6 +16,8 @@ const userRouter = express.Router();
 userRouter.post("/register", registerController);
 userRouter.post("/login", loginController);
 userRouter.get("/logout", logoutController);
+userRouter.put("/:id", isAuthorized, isAdmin, updateUserController);
+userRouter.delete("/:id", isAuthorized, isAdmin, deleteUserController);
 
 // Admin Routes
 

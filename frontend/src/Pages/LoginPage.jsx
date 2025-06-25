@@ -47,7 +47,7 @@ export default function LoginPage() {
       });
   };
   return (
-    <div className="flex h-screen items-center justify-center">
+    <div className="flex items-center justify-center">
       <Card className="w-full max-w-sm">
         <form onSubmit={handleSubmit}>
           <CardHeader className="text-center">

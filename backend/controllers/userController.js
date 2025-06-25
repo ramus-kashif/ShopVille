@@ -103,10 +103,63 @@ const allUsersController = async (req, res) => {
       .send({ success: false, message: "error in allUsersController", error });
   }
 };
+const updateUserController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email, role } = req.body;
+    if (!email || typeof role === "undefined") {
+      return res
+        .status(400)
+        .send({ success: false, message: "Email and role are required" });
+    }
+    const userToUpdate = await userModel.findById(id);
+    if (!userToUpdate) {
+      return res.status(404).send({ success: false, message: "User not found" });
+    }
+    // Prevent demoting the last admin
+    if (userToUpdate.role === 1 && role != 1) {
+      const adminCount = await userModel.countDocuments({ role: 1 });
+      if (adminCount === 1) {
+        return res.status(400).send({ success: false, message: "Cannot demote the last admin user." });
+      }
+    }
+    userToUpdate.email = email;
+    userToUpdate.role = role;
+    await userToUpdate.save();
+    const updatedUser = await userModel.findById(id).select("-password");
+    return res.status(200).send({ success: true, message: "User updated successfully", user: updatedUser });
+  } catch (error) {
+    console.log(`updateUserController Error ${error}`);
+    return res.status(400).send({ success: false, message: "Error updating user", error });
+  }
+};
+const deleteUserController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userToDelete = await userModel.findById(id);
+    if (!userToDelete) {
+      return res.status(404).send({ success: false, message: "User not found" });
+    }
+    // Prevent deleting the last admin
+    if (userToDelete.role === 1) {
+      const adminCount = await userModel.countDocuments({ role: 1 });
+      if (adminCount === 1) {
+        return res.status(400).send({ success: false, message: "Cannot delete the last admin user." });
+      }
+    }
+    await userModel.findByIdAndDelete(id);
+    return res.status(200).send({ success: true, message: "User deleted successfully" });
+  } catch (error) {
+    console.log(`deleteUserController Error ${error}`);
+    return res.status(400).send({ success: false, message: "Error deleting user", error });
+  }
+};
 
 export {
   registerController,
   loginController,
   logoutController,
   allUsersController,
+  updateUserController,
+  deleteUserController,
 };
