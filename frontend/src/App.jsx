@@ -17,6 +17,8 @@ import Categories from "./Pages/Admin/Categories";
 import UpdateCategory from "./Pages/Admin/UpdateCategory";
 import AddProduct from "./Pages/Admin/addProduct";
 import ProtectedRoute from "./components/ProtectedRoute";
+import UpdateProduct from "./Pages/Admin/UpdateProduct";
+import ProductDetails from "./Pages/ProductDetails";
 
 function App() {
   const location = useLocation();
@@ -35,6 +37,7 @@ function App() {
         />
         <Route path="/about" element={<About />} />
         <Route path="/shop" element={<Shop />} />
+        <Route path="/product/:productId" element={<ProductDetails />} />
         <Route path="/contact" element={<Contact />} />
         <Route
           path="/profile"
@@ -62,6 +65,7 @@ function App() {
           <Route path="products/add" element={<AddProduct />} />
           <Route path="categories" element={<Categories />} />
           <Route path="categories/update/:slug" element={<UpdateCategory />} />
+          <Route path="products/update/:productId" element={<UpdateProduct />} />
           <Route path="orders" element={<Orders />} />
         </Route>
       </Routes>

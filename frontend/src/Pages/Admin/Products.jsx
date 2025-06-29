@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import axios from "axios";
 import {
   Table,
   TableBody,
@@ -25,17 +24,18 @@ import { MoreHorizontal } from "lucide-react";
 import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 import moment from "moment";
 import { toast } from "react-toastify";
+import formatNumber from 'format-number'
 
 function Products() {
   const products = useSelector((state) => state.products.products);
   const status = useSelector((state) => state.products.status);
   const error = useSelector((state) => state.products.error);
-  const dispatch = useDispatch(); ///
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   // const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    axios;
     dispatch(getAllProducts()); //get all products function
   }, [dispatch]);
 
@@ -70,13 +70,6 @@ function Products() {
     );
   }
 
-  // useEffect(() => {
-  //   axios
-  //     .get(`${import.meta.env.VITE_BASE_URL}/products`)
-  //     .then((res) => setProducts(res.data.product || []))
-  //     .catch(() => setProducts([]));
-  // }, []);
-
   return (
     <div className="p-6">
       <div className="flex justify-between items-center">
@@ -93,6 +86,8 @@ function Products() {
             <TableHead>Title</TableHead>
             <TableHead>Description</TableHead>
             <TableHead>Price</TableHead>
+            <TableHead>Discount (%)</TableHead>
+            <TableHead>Final Price</TableHead>
             <TableHead>Category</TableHead>
             <TableHead>Added By</TableHead>
             <TableHead>Date</TableHead>
@@ -109,14 +104,16 @@ function Products() {
                 <TableCell>
                   <img
                     alt="Product image"
-                    className="aspect-square rounded-md object-cover"
+                    className="aspect-square rounded-md object-contain"
                     src={product.picture?.secure_url}
                     width="64"
                   />
                 </TableCell>
                 <TableCell className="font-medium">{product.title}</TableCell>
                 <TableCell>{product.description}</TableCell>
-                <TableCell>{product.price || 0}</TableCell>
+                <TableCell>{formatNumber({prefix: 'Rs. '})(product.price) || 0}</TableCell>
+                <TableCell>{product.discount || 0}</TableCell>
+                <TableCell>{formatNumber({prefix: 'Rs. '})(product.price - (product.price * (product.discount || 0) / 100))}</TableCell>
                 <TableCell>{product.category?.name || 0}</TableCell>
                 <TableCell>{product.user?.name || 0}</TableCell>
                 <TableCell>
@@ -133,17 +130,23 @@ function Products() {
                       <DropdownMenuLabel className="text-gray-500 dark:text-gray-400 px-2 pb-1">
                         Actions
                       </DropdownMenuLabel>
-                      <DropdownMenuItem className="px-2 py-2 rounded-md cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900 hover:text-blue-700 transition">
-                        Edit
-                      </DropdownMenuItem>
                       <DropdownMenuItem className="px-2 py-2 rounded-md cursor-pointer hover:bg-red-100 dark:hover:bg-red-900 text-red-600 hover:text-red-800 transition">
+                        <button
+                          onClick={() => {
+                            navigate(`/admin/products/update/${product._id}`);
+                          }}
+                        >
+                          Edit
+                        </button>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="px-2 py-2 rounded-md cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900 hover:text-blue-700 transition">
                         <button
                           onClick={() => {
                             handleDelete(product._id);
                           }}
                         >
                           Delete
-                        </button>
+                        </button>{" "}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

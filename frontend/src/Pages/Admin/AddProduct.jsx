@@ -121,6 +121,19 @@ function AddProduct() {
                   />
                 </div>
                 <div className="grid gap-2">
+                  <Label htmlFor="discount">Discount (%)</Label>
+                  <Input
+                    id="discount"
+                    placeholder="Enter discount percentage"
+                    name="discount"
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={inputValues.discount || ""}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="grid gap-2">
                   <Label htmlFor="category">Category</Label>
                   <Select onValueChange={handleCategoryChange}>
                     <SelectTrigger className="">

@@ -15,7 +15,7 @@ export const addProduct = createAsyncThunk(
 
 export const getAllProducts = createAsyncThunk(
   "produts/getAllProducts",
-  async ( thunkAPI) => {
+  async (thunkAPI) => {
     try {
       const response = await productService.getAllProd();
       return response;
@@ -36,6 +36,43 @@ export const deleteProduct = createAsyncThunk(
     }
   }
 );
+
+export const getSingleProduct = createAsyncThunk(
+  "products/getSingleProduct",
+  async (productId, thunkAPI) => {
+    try {
+      const response = await productService.getSingleProd(productId);
+      return response;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error);
+    }
+  }
+);
+
+export const updateSingleProduct = createAsyncThunk(
+  "products/updateSingleProduct",
+  async ({ inputValues, productId }, thunkAPI) => {
+    try {
+      const response = await productService.updateProd(inputValues, productId);
+      return response;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error);
+    }
+  }
+);
+
+export const searchProducts = createAsyncThunk(
+  "products/searchProducts",
+  async ({ search = "", page = 1, limit = 8 }, thunkAPI) => {
+    try {
+      const response = await productService.searchProducts({ search, page, limit });
+      return response;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error);
+    }
+  }
+);
+
 const initialState = {
   products: [],
   status: "idle",
@@ -82,6 +119,43 @@ export const productsSlice = createSlice({
         state.products = action.payload;
       })
       .addCase(deleteProduct.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(getSingleProduct.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(getSingleProduct.fulfilled, (state, action) => {
+        state.status = "success";
+        state.products = action.payload;
+      })
+      .addCase(getSingleProduct.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(updateSingleProduct.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(updateSingleProduct.fulfilled, (state, action) => {
+        state.status = "success";
+        state.products = action.payload;
+      })
+      .addCase(updateSingleProduct.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(searchProducts.pending, (state) => {
+        state.status = "loading";
+        // Do not reset products here!
+      })
+      .addCase(searchProducts.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        // Only update products, keep other state
+        state.products = action.payload;
+      })
+      .addCase(searchProducts.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       });
