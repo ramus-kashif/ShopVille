@@ -1,55 +1,12 @@
 import axios from "axios";
 
-// This function creates a new product by sending a POST request to the server
-// Use this function in productSlice.js => createAsyncThunk
-
-const createProduct = async (inputValues) => {
-  try {
-    const axiosResponse = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/products`,
-      inputValues,
-      {
-        withCredentials: true, // Include credentials (cookies) in the request
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-    return axiosResponse.data;
-  } catch (error) {
-    const errorMessage =
-      error.response?.data?.message ||
-      error.message ||
-      "Something went wrong! Please try again";
-    return Promise.reject(errorMessage);
-  }
-};
-
-const getAllProd = async () => {
+// Get all products
+const getAllProducts = async () => {
   try {
     const axiosResponse = await axios.get(
-      `${import.meta.env.VITE_BASE_URL}/products`,
+      `http://localhost:8080/api/v1/products`,
       {
-        withCredentials: true, // axios send automatically cookies when we apply this property
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-    return axiosResponse.data;
-  } catch (error) {
-    const errorMessage =
-      error.response?.data?.message ||
-      error.message ||
-      "Something went wrong! Please try again";
-    return Promise.reject(errorMessage);
-  }
-};
-
-const deleteProd = async (productId) => {
-  try {
-    const axiosResponse = await axios.delete(
-      `${import.meta.env.VITE_BASE_URL}/products/${productId}`,
-      {
-        withCredentials: true, // axios send automatically cookies when we apply this property
+        withCredentials: true,
         headers: { "Content-Type": "application/json" },
       }
     );
@@ -64,12 +21,12 @@ const deleteProd = async (productId) => {
 };
 
 // Get single product
-const getSingleProd = async (productId) => {
+const getSingleProduct = async (productId) => {
   try {
     const axiosResponse = await axios.get(
-      `${import.meta.env.VITE_BASE_URL}/products/${productId}`,
+      `http://localhost:8080/api/v1/products`,
       {
-        withCredentials: true, // axios send automatically cookies when we apply this property
+        withCredentials: true,
         headers: { "Content-Type": "application/json" },
       }
     );
@@ -83,18 +40,14 @@ const getSingleProd = async (productId) => {
   }
 };
 
-//Update single product
-
-const updateProd = async (inputValues, productId) => {
+// Get product by ID
+const getProductById = async (productId) => {
   try {
-    const axiosResponse = await axios.put(
-      `${import.meta.env.VITE_BASE_URL}/products/${productId}`,
-      inputValues,
+    const axiosResponse = await axios.get(
+      `http://localhost:8080/api/v1/products/${productId}`,
       {
-        withCredentials: true, // Include credentials (cookies) in the request
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
       }
     );
     return axiosResponse.data;
@@ -107,11 +60,80 @@ const updateProd = async (inputValues, productId) => {
   }
 };
 
-const searchProducts = async ({ search = "", page = 1, limit = 8 }) => {
+// Create product
+const createProduct = async (productData) => {
   try {
-    const params = new URLSearchParams({ search, page, limit });
+    const axiosResponse = await axios.post(
+      `http://localhost:8080/api/v1/products/${productId}`,
+      productData,
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    return axiosResponse.data;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message ||
+      error.message ||
+      "Something went wrong! Please try again";
+    return Promise.reject(errorMessage);
+  }
+};
+
+// Update product
+const updateProduct = async (productId, productData) => {
+  try {
+    const axiosResponse = await axios.put(
+      `http://localhost:8080/api/v1/products/${productId}`,
+      productData,
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    return axiosResponse.data;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message ||
+      error.message ||
+      "Something went wrong! Please try again";
+    return Promise.reject(errorMessage);
+  }
+};
+
+// Delete product
+const deleteProduct = async (productId) => {
+  try {
+    const axiosResponse = await axios.delete(
+      `http://localhost:8080/api/v1/products/${productId}`,
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    return axiosResponse.data;
+  } catch (error) {
+    const errorMessage =
+      error.response?.data?.message ||
+      error.message ||
+      "Something went wrong! Please try again";
+    return Promise.reject(errorMessage);
+  }
+};
+
+// Search products
+const searchProducts = async (searchParams) => {
+  try {
+    const params = new URLSearchParams();
+    Object.keys(searchParams).forEach(key => {
+      if (searchParams[key] !== undefined && searchParams[key] !== null && searchParams[key] !== '') {
+        params.append(key, searchParams[key]);
+      }
+    });
+
     const axiosResponse = await axios.get(
-      `${import.meta.env.VITE_BASE_URL}/products/search?${params.toString()}`,
+      `http://localhost:8080/api/v1/products/search?${params.toString()}`,
       {
         withCredentials: true,
         headers: { "Content-Type": "application/json" },
@@ -128,11 +150,12 @@ const searchProducts = async ({ search = "", page = 1, limit = 8 }) => {
 };
 
 const productService = {
+  getAllProducts,
+  getSingleProduct,
+  getProductById,
   createProduct,
-  getAllProd,
-  deleteProd,
-  getSingleProd,
-  updateProd,
+  updateProduct,
+  deleteProduct,
   searchProducts,
 };
 

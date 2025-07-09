@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 
 const registerController = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
     if (!name || !email || !password) {
       return res
         .status(400)
@@ -24,12 +24,18 @@ const registerController = async (req, res) => {
     const hashedPassword = await encryptPassword(password);
 
     // creating new user
-
-    const newUser = await userModel.create({
+    const userData = {
       name,
       email,
       password: hashedPassword,
-    });
+    };
+
+    // Add role if provided (for admin user creation)
+    if (role !== undefined) {
+      userData.role = role;
+    }
+
+    const newUser = await userModel.create(userData);
     return res
       .status(201)
       .send({ success: true, message: "User registeration successful" });
@@ -105,32 +111,45 @@ const allUsersController = async (req, res) => {
 };
 const updateUserController = async (req, res) => {
   try {
+    console.log("=== UPDATE USER DEBUG START ===");
+    console.log("1. Request params:", req.params);
+    console.log("2. Request body:", req.body);
+    
     const { id } = req.params;
-    const { email, role } = req.body;
-    if (!email || typeof role === "undefined") {
-      return res
-        .status(400)
-        .send({ success: false, message: "Email and role are required" });
-    }
+    const { name, email, picture, password, role } = req.body;
+    
+    console.log("3. Extracted data:", { name, email, picture, password, role });
+    
     const userToUpdate = await userModel.findById(id);
     if (!userToUpdate) {
+      console.log("4. User not found");
       return res.status(404).send({ success: false, message: "User not found" });
     }
-    // Prevent demoting the last admin
-    if (userToUpdate.role === 1 && role != 1) {
-      const adminCount = await userModel.countDocuments({ role: 1 });
-      if (adminCount === 1) {
-        return res.status(400).send({ success: false, message: "Cannot demote the last admin user." });
-      }
+    
+    console.log("5. Found user:", userToUpdate);
+    
+    if (name) userToUpdate.name = name;
+    if (email) userToUpdate.email = email;
+    if (typeof picture !== 'undefined') userToUpdate.picture = picture;
+    if (password) {
+      userToUpdate.password = await encryptPassword(password);
     }
-    userToUpdate.email = email;
-    userToUpdate.role = role;
+    if (role !== undefined) userToUpdate.role = role;
+    
+    console.log("6. Updated user data:", userToUpdate);
+    
     await userToUpdate.save();
     const updatedUser = await userModel.findById(id).select("-password");
+    
+    console.log("7. User saved successfully");
+    console.log("=== UPDATE USER DEBUG END ===");
+    
     return res.status(200).send({ success: true, message: "User updated successfully", user: updatedUser });
   } catch (error) {
-    console.log(`updateUserController Error ${error}`);
-    return res.status(400).send({ success: false, message: "Error updating user", error });
+    console.error("=== UPDATE USER ERROR ===");
+    console.error("Error details:", error);
+    console.error("Error stack:", error.stack);
+    return res.status(400).send({ success: false, message: "Error updating user", error: error.message });
   }
 };
 const deleteUserController = async (req, res) => {

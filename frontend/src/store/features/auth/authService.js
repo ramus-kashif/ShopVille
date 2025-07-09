@@ -3,11 +3,10 @@ import axios from "axios";
 // use this function in store.js => createAsyncThunk
 
 // Register
-
-const registerUser = async (inputValues) => {
+const register = async (inputValues) => {
   try {
     const axiosResponse = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/users/register`,
+      `http://localhost:8080/api/v1/users/register`,
       inputValues,
       {
         withCredentials: true, // axios send automatically cookies when we apply this property
@@ -25,11 +24,10 @@ const registerUser = async (inputValues) => {
 };
 
 // Login
-
-const loginUser = async (inputValues) => {
+const login = async (inputValues) => {
   try {
     const axiosResponse = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/users/login`,
+      `http://localhost:8080/api/v1/users/login`,
       inputValues,
       {
         withCredentials: true, // axios send automatically cookies when we apply this property
@@ -45,12 +43,13 @@ const loginUser = async (inputValues) => {
     return Promise.reject(errorMessage);
   }
 };
-// Logout
 
-const logoutUser = async () => {
+// Logout
+const logout = async () => {
   try {
-    const axiosResponse = await axios.get(
-      `${import.meta.env.VITE_BASE_URL}/users/logout`,
+    const axiosResponse = await axios.post(
+      `http://localhost:8080/api/v1/users/logout`,
+      {},
       {
         withCredentials: true, // axios send automatically cookies when we apply this property
         headers: { "Content-Type": "application/json" },
@@ -66,6 +65,6 @@ const logoutUser = async () => {
   }
 };
 
-const authService = { registerUser, loginUser, logoutUser };
+const authService = { register, login, logout };
 
 export default authService;

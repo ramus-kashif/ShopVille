@@ -13,4 +13,23 @@ const storage = multer.diskStorage({
   },
 });
 
+// Memory storage for image search
+const memoryStorage = multer.memoryStorage();
+
+// File filter for images
+const imageFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed!'), false);
+  }
+};
+
 export const upload = multer({ storage: storage });
+export const uploadMemory = multer({ 
+  storage: memoryStorage,
+  fileFilter: imageFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+});

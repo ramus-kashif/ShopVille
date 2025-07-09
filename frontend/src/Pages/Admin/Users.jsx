@@ -26,7 +26,7 @@ function Users() {
 
   const getAllUsers = () => {
     axios
-      .get(`${import.meta.env.VITE_BASE_URL}/users/all-users`, {
+      .get(`http://localhost:8080/api/v1/users/all-users`, {
         withCredentials: true,
         headers: { "Content-Type": "application/json" },
       })
@@ -77,7 +77,7 @@ function Users() {
           onClick={async () => {
             toast.dismiss();
             try {
-              await axios.delete(`${import.meta.env.VITE_BASE_URL}/users/${userId}`, {
+              await axios.delete(`http://localhost:8080/api/v1/users/${userId}`, {
                 withCredentials: true,
                 headers: { "Content-Type": "application/json" },
               });
@@ -107,7 +107,7 @@ function Users() {
     e.preventDefault();
     try {
       await axios.put(
-        `${import.meta.env.VITE_BASE_URL}/users/${editingUser._id}`,
+        `http://localhost:8080/api/v1/users/${editingUser._id}`,
         formData,
         {
           withCredentials: true,
@@ -227,8 +227,8 @@ function Users() {
                       toast.error("You cannot change your own role while logged in as admin!");
                       return;
                     }
+                    // Call handleFormSubmit which handles its own toasts
                     await handleFormSubmit(e);
-                    toast.success("User updated successfully");
                   } else {
                     // Add user logic
                     if (
@@ -240,7 +240,7 @@ function Users() {
                       return;
                     }
                     await axios.post(
-                      `${import.meta.env.VITE_BASE_URL}/users/register`,
+                      `http://localhost:8080/api/v1/users/register`,
                       formData,
                       {
                         withCredentials: true,

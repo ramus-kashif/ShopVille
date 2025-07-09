@@ -1,178 +1,393 @@
-import { CircleUser, Menu, Package2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
-import { Button } from "./ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import { logout } from "@/store/features/auth/authSlice";
-import { useDispatch, useSelector } from "react-redux";
-import { toast } from "react-toastify";
+import { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { Link } from "react-router-dom";
+import { 
+  Package, 
+  ShoppingCart, 
+  User, 
+  Search, 
+  Menu, 
+  X, 
+  Home, 
+  Store, 
+  ChevronDown, 
+  Phone, 
+  LogOut, 
+  Settings, 
+  Heart 
+} from "lucide-react";
+import { getAllCategories, setSelectedCategory } from "@/store/features/categories/categoriesSlice";
+import { searchProducts } from "@/store/features/products/productSlice";
 
-function Navbar() {
-  const user = useSelector((state) => state.auth.user?.user);
+export default function Navbar() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isScrolled, setIsScrolled] = useState(false);
+  
+  const cartItems = useSelector((state) => state.cart.items);
+  const user = useSelector((state) => state.auth.user);
+  const categories = useSelector((state) => state.categories.categories) || [];
+  const selectedCategory = useSelector((state) => state.categories.selectedCategory);
   const dispatch = useDispatch();
-  const navigate = useNavigate();
+
+  const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+
+  useEffect(() => {
+    dispatch(getAllCategories());
+  }, [dispatch]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const handleLogout = () => {
-    dispatch(logout())
-      .unwrap()
-      .then((response) => {
-        if (response?.success == true) {
-          toast.success(response?.message, { autoClose: 2000 });
-          setTimeout(() => {
-            navigate("/");
-          }, 2000);
-        } else {
-          toast.error(response?.message, { autoClose: 2000 });
-        }
-      })
-      .catch((error) => {
-        toast.error(error, { autoClose: 2000 });
-      });
+    localStorage.removeItem("user");
+    window.location.reload();
   };
+
+  const handleCategorySelect = (categoryId) => {
+    const newCategory = categoryId === selectedCategory ? "" : categoryId;
+    dispatch(setSelectedCategory(newCategory));
+    dispatch(searchProducts({ search: "", page: 1, limit: 8, category: newCategory }));
+    setIsCategoryOpen(false);
+  };
+
   return (
-    <>
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-        <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm 1g:gap-6">
-          <Link
-            to="#"
-            className="flex items-center gap-2 text-lg font-semibold md:text-base"
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      isScrolled 
+        ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-[#E0E0E0]' 
+        : 'bg-white shadow-sm'
+    }`}>
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16 lg:h-20">
+          {/* Logo */}
+          <Link 
+            to="/" 
+            className="flex items-center space-x-2 group"
           >
-            <Package2 className="h-6 w-6" />
-            <p className="text-xl">
-              Shop<span className="text-orange-500">Ville</span>
-            </p>
-            <span className="sr-only">ShopVille</span>
-          </Link>
-          <Link
-            to="/"
-            className="text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Home
-          </Link>
-          <Link
-            to="/shop"
-            className="text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Shop
-          </Link>
-          <Link
-            to="/about"
-            className="text-muted-foreground transition-colors hover:text-foreground"
-          >
-            About
-          </Link>
-          <Link
-            to="/contact"
-            className="text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Contact
-          </Link>
-        </nav>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="shrink-0 md:hidden"
-            >
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Toggle navigation menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left">
-            <nav className="grid gap-6 text-lg font-medium">
-              <Link
-                to="/"
-                className="flex items-center gap-2 text-lg font-semibold"
-              >
-                <Package2 className="h-6 w-6" />
-                <p className="text-xl">
-                  Shop<span className="text-orange-500">Ville</span>
-                </p>
-                <span className="sr-only">ShopVille</span>
-              </Link>
-              <Link
-                to="/"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Home
-              </Link>
-              <Link
-                to="/shop"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Shop
-              </Link>
-              <Link
-                to="/about"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                About
-              </Link>
-              <Link
-                to="/contact"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Contact
-              </Link>
-            </nav>
-          </SheetContent>
-        </Sheet>
-        <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 1g:gap-4">
-          <div className="ml-auto sm:flex-initial">
-            <div className="relative">Cart (0)</div>
-          </div>
-          {user == null ? (
-            <div>
-              <Button variant="outline" className="me-2">
-                <Link to="/login">Login</Link>
-              </Button>
-              <Button>
-                <Link to="/register" className="">
-                  Register
-                </Link>
-              </Button>
+            <div className="w-10 h-10 bg-gradient-to-br from-[#FF6B00] to-[#FF8C42] rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-105">
+              <Package className="w-6 h-6 text-white" />
             </div>
-          ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className="rounded-full"
+            <span className="text-2xl font-bold bg-gradient-to-r from-[#FF6B00] to-[#FF8C42] bg-clip-text text-transparent">
+              ShopVille
+            </span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center space-x-8">
+            {/* Home Link */}
+            <Link 
+              to="/" 
+              className="flex items-center space-x-2 text-[#1C1C1E] hover:text-[#FF6B00] transition-colors duration-200 font-medium"
+            >
+              <Home className="w-4 h-4" />
+              <span>Home</span>
+            </Link>
+
+            {/* Category Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+                className="flex items-center space-x-2 text-[#1C1C1E] hover:text-[#FF6B00] transition-colors duration-200 font-medium focus:outline-none"
+              >
+                <Store className="w-4 h-4" />
+                <span>Categories</span>
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isCategoryOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Category Dropdown Menu */}
+              {isCategoryOpen && (
+                <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-[#E0E0E0] py-2 animate-fade-in">
+                  <div className="px-4 py-2 border-b border-[#E0E0E0]">
+                    <h3 className="text-sm font-semibold text-[#1C1C1E]">All Categories</h3>
+                  </div>
+                  <div className="max-h-64 overflow-y-auto">
+                    {Array.isArray(categories) && categories.length > 0 ? (
+                      categories.map((category) => (
+                        <button
+                          key={category._id}
+                          onClick={() => handleCategorySelect(category._id)}
+                          className={`flex items-center space-x-3 px-4 py-3 text-[#6C757D] hover:text-[#FF6B00] hover:bg-[#F8F9FA] transition-colors duration-200 w-full text-left ${selectedCategory === category._id ? 'bg-[#FF6B00]/10 text-[#FF6B00] font-semibold' : ''}`}
+                        >
+                          <div className="w-2 h-2 bg-[#FF6B00] rounded-full"></div>
+                          <span className="font-medium capitalize">{category.name}</span>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-4 py-3 text-[#6C757D] text-sm">
+                        No categories available
+                      </div>
+                    )}
+                  </div>
+                  <div className="px-4 py-2 border-t border-[#E0E0E0]">
+                    <Link
+                      to="/shop"
+                      onClick={() => setIsCategoryOpen(false)}
+                      className="text-[#FF6B00] hover:text-[#E55A00] font-semibold text-sm transition-colors duration-200"
+                    >
+                      View All Products →
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Shop Link */}
+            <Link 
+              to="/shop" 
+              className="flex items-center space-x-2 text-[#1C1C1E] hover:text-[#FF6B00] transition-colors duration-200 font-medium"
+            >
+              <Package className="w-4 h-4" />
+              <span>Shop</span>
+            </Link>
+
+            {/* Contact Link */}
+            <Link 
+              to="/contact" 
+              className="flex items-center space-x-2 text-[#1C1C1E] hover:text-[#FF6B00] transition-colors duration-200 font-medium"
+            >
+              <Phone className="w-4 h-4" />
+              <span>Contact</span>
+            </Link>
+          </div>
+
+          {/* Right Side - Search, Cart, Profile */}
+          <div className="flex items-center space-x-4">
+            {/* Search Bar */}
+            <div className="hidden md:flex items-center relative">
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-64 px-4 py-2 pl-10 pr-4 border-2 border-[#E0E0E0] rounded-xl bg-white text-[#1C1C1E] placeholder-[#6C757D] focus:border-[#FF6B00] focus:ring-4 focus:ring-[#FF6B00]/10 focus:outline-none transition-all duration-200"
+              />
+              <Search className="absolute left-3 w-4 h-4 text-[#6C757D]" />
+            </div>
+
+            {/* Cart Icon */}
+            <Link 
+              to="/cart" 
+              className="relative group"
+            >
+              <div className="w-12 h-12 bg-[#F8F9FA] hover:bg-[#FF6B00]/10 rounded-xl flex items-center justify-center transition-all duration-300 transform hover:scale-105 border-2 border-[#E0E0E0] hover:border-[#FF6B00]">
+                <ShoppingCart className="w-5 h-5 text-[#1C1C1E] group-hover:text-[#FF6B00] transition-colors duration-200" />
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 w-6 h-6 bg-[#FF6B00] text-white text-xs rounded-full flex items-center justify-center font-bold animate-bounce-in">
+                    {cartItemCount}
+                  </span>
+                )}
+              </div>
+            </Link>
+
+            {/* Profile Dropdown */}
+            {user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="w-12 h-12 bg-gradient-to-br from-[#FF6B00] to-[#FF8C42] rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 focus:outline-none"
                 >
-                  <CircleUser className="h-5 w-5" />
-                  <span className="sr-only">Toggle user menu</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  {user.role === 1 ? (
-                    <Link to="/admin">Dashboard</Link>
+                  {user.avatar ? (
+                    <img 
+                      src={user.avatar} 
+                      alt={user.name} 
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
                   ) : (
-                    <Link to="/profile">Profile</Link>
+                    <User className="w-5 h-5 text-white" />
                   )}
-                </DropdownMenuItem>
-                <DropdownMenuItem>Support</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <button onClick={handleLogout}>Logout</button>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+                </button>
+
+                {/* Profile Dropdown Menu */}
+                {isProfileOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-[#E0E0E0] py-2 animate-fade-in">
+                    <div className="px-4 py-3 border-b border-[#E0E0E0]">
+                      <div className="flex items-center space-x-3">
+                        {user.avatar ? (
+                          <img 
+                            src={user.avatar} 
+                            alt={user.name} 
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 bg-gradient-to-br from-[#FF6B00] to-[#FF8C42] rounded-full flex items-center justify-center">
+                            <User className="w-5 h-5 text-white" />
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-semibold text-[#1C1C1E]">{user.name}</p>
+                          <p className="text-sm text-[#6C757D]">{user.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="py-2">
+                      <Link
+                        to="/profile"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center space-x-3 px-4 py-3 text-[#6C757D] hover:text-[#FF6B00] hover:bg-[#F8F9FA] transition-colors duration-200"
+                      >
+                        <User className="w-4 h-4" />
+                        <span>Profile</span>
+                      </Link>
+                      
+                      <Link
+                        to="/orders"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center space-x-3 px-4 py-3 text-[#6C757D] hover:text-[#FF6B00] hover:bg-[#F8F9FA] transition-colors duration-200"
+                      >
+                        <Package className="w-4 h-4" />
+                        <span>My Orders</span>
+                      </Link>
+                      
+                      <Link
+                        to="/wishlist"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center space-x-3 px-4 py-3 text-[#6C757D] hover:text-[#FF6B00] hover:bg-[#F8F9FA] transition-colors duration-200"
+                      >
+                        <Heart className="w-4 h-4" />
+                        <span>Wishlist</span>
+                      </Link>
+                      
+                      {user.role === 1 && (
+                        <Link
+                          to="/admin"
+                          onClick={() => setIsProfileOpen(false)}
+                          className="flex items-center space-x-3 px-4 py-3 text-[#6C757D] hover:text-[#FF6B00] hover:bg-[#F8F9FA] transition-colors duration-200"
+                        >
+                          <Settings className="w-4 h-4" />
+                          <span>Admin Panel</span>
+                        </Link>
+                      )}
+                    </div>
+                    
+                    <div className="px-4 py-2 border-t border-[#E0E0E0]">
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center space-x-3 w-full px-4 py-3 text-[#DC3545] hover:text-[#BD2130] hover:bg-[#F8F9FA] rounded-lg transition-colors duration-200"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center space-x-3">
+                <Link
+                  to="/login"
+                  className="px-4 py-2 text-[#1C1C1E] hover:text-[#FF6B00] font-medium transition-colors duration-200"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  to="/register"
+                  className="px-4 py-2 bg-[#FF6B00] hover:bg-[#E55A00] text-white rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="lg:hidden w-10 h-10 bg-[#F8F9FA] hover:bg-[#FF6B00]/10 rounded-xl flex items-center justify-center transition-all duration-200 border-2 border-[#E0E0E0] hover:border-[#FF6B00]"
+            >
+              {isMenuOpen ? (
+                <X className="w-5 h-5 text-[#1C1C1E]" />
+              ) : (
+                <Menu className="w-5 h-5 text-[#1C1C1E]" />
+              )}
+            </button>
+          </div>
         </div>
-      </header>
-    </>
+
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <div className="lg:hidden py-4 border-t border-[#E0E0E0] animate-fade-in">
+            <div className="space-y-4">
+              <Link 
+                to="/" 
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center space-x-2 text-[#1C1C1E] hover:text-[#FF6B00] transition-colors duration-200 font-medium"
+              >
+                <Home className="w-4 h-4" />
+                <span>Home</span>
+              </Link>
+              
+              <Link 
+                to="/shop" 
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center space-x-2 text-[#1C1C1E] hover:text-[#FF6B00] transition-colors duration-200 font-medium"
+              >
+                <Package className="w-4 h-4" />
+                <span>Shop</span>
+              </Link>
+              
+              <Link 
+                to="/contact" 
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center space-x-2 text-[#1C1C1E] hover:text-[#FF6B00] transition-colors duration-200 font-medium"
+              >
+                <Phone className="w-4 h-4" />
+                <span>Contact</span>
+              </Link>
+              
+              {user && (
+                <>
+                  <Link 
+                    to="/profile" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center space-x-2 text-[#1C1C1E] hover:text-[#FF6B00] transition-colors duration-200 font-medium"
+                  >
+                    <User className="w-4 h-4" />
+                    <span>Profile</span>
+                  </Link>
+                  
+                  <Link 
+                    to="/orders" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center space-x-2 text-[#1C1C1E] hover:text-[#FF6B00] transition-colors duration-200 font-medium"
+                  >
+                    <Package className="w-4 h-4" />
+                    <span>My Orders</span>
+                  </Link>
+                  
+                  {user.role === 1 && (
+                    <Link 
+                      to="/admin" 
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center space-x-2 text-[#1C1C1E] hover:text-[#FF6B00] transition-colors duration-200 font-medium"
+                    >
+                      <Settings className="w-4 h-4" />
+                      <span>Admin Panel</span>
+                    </Link>
+                  )}
+                  
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex items-center space-x-2 w-full text-left text-[#DC3545] hover:text-[#BD2130] transition-colors duration-200 font-medium"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sign Out</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </nav>
   );
 }
-
-export default Navbar;

@@ -5,7 +5,7 @@ export const register = createAsyncThunk(
   "auth/register",
   async (inputValues, thunkAPI) => {
     try {
-      const response = await authService.registerUser(inputValues);
+      const response = await authService.register(inputValues);
       return response;
     } catch (error) {
       return thunkAPI.rejectWithValue(error);
@@ -17,7 +17,7 @@ export const login = createAsyncThunk(
   "auth/login",
   async (inputValues, thunkAPI) => {
     try {
-      const response = await authService.loginUser(inputValues);
+      const response = await authService.login(inputValues);
       window.localStorage.setItem("user", JSON.stringify(response));
       return response;
     } catch (error) {
@@ -28,7 +28,7 @@ export const login = createAsyncThunk(
 // use this function in logout - DashboardLayout
 export const logout = createAsyncThunk("auth/logout", async (thunkAPI) => {
   try {
-    const response = await authService.logoutUser();
+    const response = await authService.logout();
     window.localStorage.removeItem("user"); // Remove user from localStorage on logout
     return response;
   } catch (error) {

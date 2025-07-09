@@ -64,12 +64,17 @@ const initialState = {
   categories: [],
   status: "idle",
   error: null,
+  selectedCategory: "",
 };
-// use this in store file, authReducer
+// use this in store file, categoriesReducer
 export const categorieSlice = createSlice({
-  name: "auth",
+  name: "categories",
   initialState,
-  reducers: {},
+  reducers: {
+    setSelectedCategory: (state, action) => {
+      state.selectedCategory = action.payload;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(AddCategory.pending, (state) => {
@@ -78,7 +83,7 @@ export const categorieSlice = createSlice({
       })
       .addCase(AddCategory.fulfilled, (state, action) => {
         state.status = "success";
-        state.categories = action.payload;
+        state.categories = action.payload.categories || [];
       })
       .addCase(AddCategory.rejected, (state, action) => {
         state.status = "failed";
@@ -90,7 +95,7 @@ export const categorieSlice = createSlice({
       })
       .addCase(getAllCategories.fulfilled, (state, action) => {
         state.status = "success";
-        state.categories = action.payload;
+        state.categories = action.payload.categories || [];
       })
       .addCase(getAllCategories.rejected, (state, action) => {
         state.status = "failed";
@@ -102,7 +107,7 @@ export const categorieSlice = createSlice({
       })
       .addCase(GetSingleCategory.fulfilled, (state, action) => {
         state.status = "success";
-        state.categories = action.payload;
+        state.categories = action.payload.category ? [action.payload.category] : [];
       })
       .addCase(GetSingleCategory.rejected, (state, action) => {
         state.status = "failed";
@@ -114,7 +119,8 @@ export const categorieSlice = createSlice({
       })
       .addCase(updateCategory.fulfilled, (state, action) => {
         state.status = "success";
-        state.categories = action.payload;
+        // Refresh categories list after update
+        // The actual categories will be fetched again when needed
       })
       .addCase(updateCategory.rejected, (state, action) => {
         state.status = "failed";
@@ -126,7 +132,8 @@ export const categorieSlice = createSlice({
       })
       .addCase(DeleteCategory.fulfilled, (state, action) => {
         state.status = "success";
-        state.categories = action.payload;
+        // Refresh categories list after delete
+        // The actual categories will be fetched again when needed
       })
       .addCase(DeleteCategory.rejected, (state, action) => {
         state.status = "failed";
@@ -136,6 +143,6 @@ export const categorieSlice = createSlice({
 });
 
 // Action creators are generated for each case reducer function
-// export const { incrementByAmount } = categorieSlice.actions;
+export const { setSelectedCategory } = categorieSlice.actions;
 
 export default categorieSlice.reducer;

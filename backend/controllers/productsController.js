@@ -206,14 +206,20 @@ const updateSingleProductController = async (req, res) => {
   }
 };
 
-// GET /api/v1/products?search=...&page=...&limit=...
+// GET /api/v1/products?search=...&page=...&limit=...&category=...
 const getPaginatedProductsController = async (req, res) => {
   try {
-    const { search = "", page = 1, limit = 10 } = req.query;
+    const { search = "", page = 1, limit = 10, category = "" } = req.query;
     const query = {};
+    
     if (search) {
       query.title = { $regex: search, $options: "i" };
     }
+    
+    if (category) {
+      query.category = category;
+    }
+    
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const [products, total] = await Promise.all([
       productsModel

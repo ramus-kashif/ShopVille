@@ -133,10 +133,8 @@ function Categories() {
           </TableHeader>
 
           <TableBody>
-            {categories &&
-            categories.categories &&
-            categories.categories.length > 0 ? (
-              categories.categories.map((category, index) => (
+            {categories && Array.isArray(categories) && categories.length > 0 ? (
+              categories.map((category, index) => (
                 <TableRow key={category._id}>
                   <TableCell>{index + 1}</TableCell>
                   <TableCell className="capitalize">{category.name}</TableCell>

@@ -14,10 +14,10 @@ export const addProduct = createAsyncThunk(
 );
 
 export const getAllProducts = createAsyncThunk(
-  "produts/getAllProducts",
+  "products/getAllProducts",
   async (thunkAPI) => {
     try {
-      const response = await productService.getAllProd();
+      const response = await productService.getAllProducts();
       return response;
     } catch (error) {
       return thunkAPI.rejectWithValue(error);
@@ -29,7 +29,7 @@ export const deleteProduct = createAsyncThunk(
   "products/deleteProduct",
   async (productId, thunkAPI) => {
     try {
-      const response = await productService.deleteProd(productId);
+      const response = await productService.deleteProduct(productId);
       return response;
     } catch (error) {
       return thunkAPI.rejectWithValue(error);
@@ -41,7 +41,7 @@ export const getSingleProduct = createAsyncThunk(
   "products/getSingleProduct",
   async (productId, thunkAPI) => {
     try {
-      const response = await productService.getSingleProd(productId);
+      const response = await productService.getProductById(productId);
       return response;
     } catch (error) {
       return thunkAPI.rejectWithValue(error);
@@ -53,7 +53,7 @@ export const updateSingleProduct = createAsyncThunk(
   "products/updateSingleProduct",
   async ({ inputValues, productId }, thunkAPI) => {
     try {
-      const response = await productService.updateProd(inputValues, productId);
+      const response = await productService.updateProduct(productId, inputValues);
       return response;
     } catch (error) {
       return thunkAPI.rejectWithValue(error);
@@ -63,9 +63,9 @@ export const updateSingleProduct = createAsyncThunk(
 
 export const searchProducts = createAsyncThunk(
   "products/searchProducts",
-  async ({ search = "", page = 1, limit = 8 }, thunkAPI) => {
+  async ({ search = "", page = 1, limit = 8, category = "" }, thunkAPI) => {
     try {
-      const response = await productService.searchProducts({ search, page, limit });
+      const response = await productService.searchProducts({ search, page, limit, category });
       return response;
     } catch (error) {
       return thunkAPI.rejectWithValue(error);

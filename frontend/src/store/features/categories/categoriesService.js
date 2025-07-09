@@ -7,7 +7,7 @@ import axios from "axios";
 const createCat = async (inputValues) => {
   try {
     const axiosResponse = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/categories`,
+      `http://localhost:8080/api/v1/categories`,
       inputValues,
       {
         withCredentials: true, // axios send automatically cookies when we apply this property
@@ -28,7 +28,7 @@ const createCat = async (inputValues) => {
 const getAllCat = async () => {
   try {
     const axiosResponse = await axios.get(
-      `${import.meta.env.VITE_BASE_URL}/categories`,
+      `http://localhost:8080/api/v1/categories`,
       {
         withCredentials: true, // axios send automatically cookies when we apply this property
         headers: { "Content-Type": "application/json" },
@@ -48,7 +48,7 @@ const getAllCat = async () => {
 const getSingleCat = async (slug) => {
   try {
     const axiosResponse = await axios.get(
-      `${import.meta.env.VITE_BASE_URL}/categories/${slug}`,
+      `http://localhost:8080/api/v1/categories/${slug}`,
       {
         withCredentials: true, // axios send automatically cookies when we apply this property
         headers: { "Content-Type": "application/json" },
@@ -67,7 +67,7 @@ const getSingleCat = async (slug) => {
 const updateCat = async ({name, slug}) => {
   try {
     const axiosResponse = await axios.put(
-      `${import.meta.env.VITE_BASE_URL}/categories/${slug}`,
+      `http://localhost:8080/api/v1/categories/${slug}`,
       {name},
       {
         withCredentials: true, // axios send automatically cookies when we apply this property
@@ -87,7 +87,7 @@ const updateCat = async ({name, slug}) => {
 const deleteCat = async (slug) => {
   try {
     const axiosResponse = await axios.delete(
-      `${import.meta.env.VITE_BASE_URL}/categories/${slug}`,
+      `http://localhost:8080/api/v1/categories/${slug}`,
       {
         withCredentials: true, // axios send automatically cookies when we apply this property
         headers: { "Content-Type": "application/json" },
