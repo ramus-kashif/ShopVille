@@ -1,23 +1,40 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import { 
   Package, 
   ShoppingCart, 
   User, 
+  LogOut, 
+  Sun, 
+  Moon, 
+  ChevronDown, 
+  ChevronUp, 
   Search, 
+  Heart, 
   Menu, 
   X, 
+  UserPlus, 
+  UserCheck, 
+  UserX, 
+  UserCog, 
+  UserCircle, 
+  Settings, 
+  Bell, 
+  Star, 
+  Shield, 
+  Truck, 
+  CreditCard, 
   Home, 
   Store, 
-  ChevronDown, 
-  Phone, 
-  LogOut, 
-  Settings, 
-  Heart 
+  Phone 
 } from "lucide-react";
 import { getAllCategories, setSelectedCategory } from "@/store/features/categories/categoriesSlice";
 import { searchProducts } from "@/store/features/products/productSlice";
+import { selectCartItemCount } from "@/store/features/cart/cartSlice";
+import { logout } from "@/store/features/auth/authSlice";
+import { useNavigate } from "react-router-dom";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -25,14 +42,15 @@ export default function Navbar() {
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
+  const profileRef = useRef(null);
+  const categoryRef = useRef(null);
   
-  const cartItems = useSelector((state) => state.cart.items);
   const user = useSelector((state) => state.auth.user);
   const categories = useSelector((state) => state.categories.categories) || [];
   const selectedCategory = useSelector((state) => state.categories.selectedCategory);
+  const cartItemCount = useSelector(selectCartItemCount);
   const dispatch = useDispatch();
-
-  const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     dispatch(getAllCategories());
@@ -46,9 +64,39 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfileOpen(false);
+      }
+      if (categoryRef.current && !categoryRef.current.contains(event.target)) {
+        setIsCategoryOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    window.location.reload();
+    dispatch(logout())
+      .unwrap()
+      .then((response) => {
+        if (response?.success) {
+          toast.success("Logged out successfully");
+          navigate("/");
+        } else {
+          toast.error(response?.message || "Logout failed");
+        }
+      })
+      .catch((error) => {
+        toast.error(error || "Logout failed");
+        // Even if the API call fails, clear local state and redirect
+        navigate("/");
+      });
   };
 
   const handleCategorySelect = (categoryId) => {
@@ -57,6 +105,8 @@ export default function Navbar() {
     dispatch(searchProducts({ search: "", page: 1, limit: 8, category: newCategory }));
     setIsCategoryOpen(false);
   };
+
+
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -91,7 +141,7 @@ export default function Navbar() {
             </Link>
 
             {/* Category Dropdown */}
-            <div className="relative">
+            <div className="relative" ref={categoryRef}>
               <button
                 onClick={() => setIsCategoryOpen(!isCategoryOpen)}
                 className="flex items-center space-x-2 text-[#1C1C1E] hover:text-[#FF6B00] transition-colors duration-200 font-medium focus:outline-none"
@@ -188,15 +238,15 @@ export default function Navbar() {
 
             {/* Profile Dropdown */}
             {user ? (
-              <div className="relative">
+              <div className="relative" ref={profileRef}>
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="w-12 h-12 bg-gradient-to-br from-[#FF6B00] to-[#FF8C42] rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 focus:outline-none"
                 >
-                  {user.avatar ? (
+                  {user.user?.picture ? (
                     <img 
-                      src={user.avatar} 
-                      alt={user.name} 
+                      src={user.user.picture} 
+                      alt={user.user.name} 
                       className="w-8 h-8 rounded-full object-cover"
                     />
                   ) : (
@@ -209,20 +259,22 @@ export default function Navbar() {
                   <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-[#E0E0E0] py-2 animate-fade-in">
                     <div className="px-4 py-3 border-b border-[#E0E0E0]">
                       <div className="flex items-center space-x-3">
-                        {user.avatar ? (
+                        {user.user?.picture ? (
                           <img 
-                            src={user.avatar} 
-                            alt={user.name} 
+                            src={user.user.picture} 
+                            alt={user.user.name} 
                             className="w-10 h-10 rounded-full object-cover"
                           />
                         ) : (
                           <div className="w-10 h-10 bg-gradient-to-br from-[#FF6B00] to-[#FF8C42] rounded-full flex items-center justify-center">
-                            <User className="w-5 h-5 text-white" />
+                            <span className="text-white font-bold text-lg">
+                              {user.user?.name?.charAt(0)?.toUpperCase() || "U"}
+                            </span>
                           </div>
                         )}
                         <div>
-                          <p className="font-semibold text-[#1C1C1E]">{user.name}</p>
-                          <p className="text-sm text-[#6C757D]">{user.email}</p>
+                          <p className="font-semibold text-[#1C1C1E]">{user.user?.name}</p>
+                          <p className="text-sm text-[#6C757D]">{user.user?.email || user.user?.phone}</p>
                         </div>
                       </div>
                     </div>
@@ -269,7 +321,12 @@ export default function Navbar() {
                     
                     <div className="px-4 py-2 border-t border-[#E0E0E0]">
                       <button
-                        onClick={handleLogout}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setIsProfileOpen(false);
+                          handleLogout();
+                        }}
                         className="flex items-center space-x-3 w-full px-4 py-3 text-[#DC3545] hover:text-[#BD2130] hover:bg-[#F8F9FA] rounded-lg transition-colors duration-200"
                       >
                         <LogOut className="w-4 h-4" />

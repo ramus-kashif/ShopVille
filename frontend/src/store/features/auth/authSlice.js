@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import authService from "./authService.js";
+import { loadUserCart } from "../cart/cartSlice.js";
 // use this function in registerPage
 export const register = createAsyncThunk(
   "auth/register",
@@ -18,7 +19,15 @@ export const login = createAsyncThunk(
   async (inputValues, thunkAPI) => {
     try {
       const response = await authService.login(inputValues);
+      console.log("Login response:", response);
       window.localStorage.setItem("user", JSON.stringify(response));
+      
+      // Load user's cart after successful login
+      if (response.user?._id) {
+        console.log("Login: Loading cart for user:", response.user._id);
+        thunkAPI.dispatch(loadUserCart({ userId: response.user._id }));
+      }
+      
       return response;
     } catch (error) {
       return thunkAPI.rejectWithValue(error);
@@ -26,12 +35,22 @@ export const login = createAsyncThunk(
   }
 );
 // use this function in logout - DashboardLayout
-export const logout = createAsyncThunk("auth/logout", async (thunkAPI) => {
+export const logout = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
   try {
     const response = await authService.logout();
+    console.log("Logout: Clearing user data but preserving cart");
     window.localStorage.removeItem("user"); // Remove user from localStorage on logout
+    window.localStorage.removeItem("token"); // Remove token from localStorage on logout
+    
+    // Don't clear user's cart from localStorage - it will be restored on next login
+    // Just clear the Redux state by setting user to null
+    
     return response;
   } catch (error) {
+    // Even if the API call fails, clear local storage
+    console.log("Logout error, still clearing user data");
+    window.localStorage.removeItem("user");
+    window.localStorage.removeItem("token");
     return thunkAPI.rejectWithValue(error);
   }
 });
@@ -50,6 +69,11 @@ export const authSlice = createSlice({
   reducers: {
     incrementByAmount: (state, action) => {
       state.value += action.payload;
+    },
+    setUserFromPhoneRegistration: (state, action) => {
+      state.user = action.payload;
+      state.status = "success";
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
@@ -94,6 +118,6 @@ export const authSlice = createSlice({
 });
 
 // Action creators are generated for each case reducer function
-export const { incrementByAmount } = authSlice.actions;
+export const { incrementByAmount, setUserFromPhoneRegistration } = authSlice.actions;
 
 export default authSlice.reducer;

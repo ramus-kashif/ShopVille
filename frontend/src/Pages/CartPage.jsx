@@ -11,6 +11,7 @@ import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, Package } from "lucide-r
 function CartPage() {
   const dispatch = useDispatch();
   const cartItems = useSelector((state) => state.cart.items);
+  const user = useSelector((state) => state.auth.user);
 
   const handleChangeQuantity = (productId, quantity) => {
     if (quantity < 1) return;
@@ -18,12 +19,13 @@ function CartPage() {
       updateQuantity({
         productId,
         quantity,
+        userId: user?._id || null,
       })
     );
   };
 
   const handleRemoveCart = (productId) => {
-    dispatch(removeFromCart(productId));
+    dispatch(removeFromCart({ itemId: productId, userId: user?._id || null }));
     toast.info("Item removed from cart successfully", { autoClose: 1500 });
   };
 

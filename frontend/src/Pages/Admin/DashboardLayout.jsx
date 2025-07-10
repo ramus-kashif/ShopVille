@@ -30,7 +30,7 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [message, setMessage] = useState(null);
-  const user = useSelector((state) => state.auth.user?.user);
+  const user = useSelector((state) => state.auth.user);
   const dispatch = useDispatch();
 
   useEffect(() => {

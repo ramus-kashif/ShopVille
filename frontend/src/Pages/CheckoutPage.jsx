@@ -43,7 +43,7 @@ export default function CheckoutPage() {
       });
       const data = await res.json();
       if (data.success) {
-        dispatch(clearCart());
+        dispatch(clearCart({ userId: user?.user?._id || user?._id || null }));
         toast.success("Order placed with Cash on Delivery", { autoClose: 1500 });
         navigate("/orders");
       } else {

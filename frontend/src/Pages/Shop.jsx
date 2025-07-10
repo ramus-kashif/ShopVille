@@ -4,8 +4,9 @@ import { getAllCategories, setSelectedCategory } from "@/store/features/categori
 import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Package, Filter, Search, Camera, Star, Shield, Truck, CreditCard } from "lucide-react";
+import { ChevronLeft, ChevronRight, Package, Filter, Search, Camera, Star, Shield, Truck, CreditCard, Sparkles } from "lucide-react";
 import { toast } from "react-toastify";
+import AdvancedImageAnalysis from "@/components/AdvancedImageAnalysis";
 
 function Shop() {
   const products = useSelector((state) => state.products.products);
@@ -24,6 +25,7 @@ function Shop() {
   const [isImageSearch, setIsImageSearch] = useState(false);
   const [uploadedImage, setUploadedImage] = useState(null);
   const [imageSearchLoading, setImageSearchLoading] = useState(false);
+  const [showAdvancedAnalysis, setShowAdvancedAnalysis] = useState(false);
   const pageSize = 8;
   const recognitionRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
@@ -196,6 +198,22 @@ function Shop() {
     recognitionRef.current.start();
   };
 
+  const handleAdvancedAnalysisComplete = (searchTerms) => {
+    if (searchTerms && searchTerms.length > 0) {
+      const combinedTerms = searchTerms.join(' ');
+      setSearch(combinedTerms);
+      setPage(1);
+      dispatch(searchProducts({ 
+        search: combinedTerms, 
+        page: 1, 
+        limit: pageSize, 
+        category: selectedCategory 
+      }));
+      setShowAdvancedAnalysis(false);
+      toast.success(`Searching for: ${combinedTerms}`);
+    }
+  };
+
   // Pagination controls
   const total = products?.total || 0;
   const totalPages = Math.ceil(total / pageSize);
@@ -268,6 +286,16 @@ function Shop() {
                   <Camera className="w-6 h-6 text-[#6C757D] hover:text-[#FF6B00]" />
                 )}
               </label>
+              
+              {/* Advanced Image Analysis Button */}
+              <button
+                type="button"
+                onClick={() => setShowAdvancedAnalysis(true)}
+                className="ml-4 flex items-center justify-center bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg w-14 h-14 transition-all duration-200 focus:outline-none shadow-md hover:shadow-lg"
+                title="Advanced Image Analysis"
+              >
+                <Sparkles className="w-6 h-6" />
+              </button>
               
               <button
                 type="button"
@@ -421,11 +449,8 @@ function Shop() {
           {/* Results Info */}
           <div className="flex items-center justify-between mb-8">
             <div className="text-[#6C757D]">
-              Showing {isImageSearch 
-                ? (products?.imageSearchResults?.length || 0) 
-                : (products?.products?.length || 0)
-              } of {isImageSearch 
-                ? (products?.imageSearchResults?.length || 0) 
+              Showing {products?.products?.length || 0} of {isImageSearch 
+                ? (products?.products?.length || 0) 
                 : total
               } products
               {selectedCategory && !isImageSearch && (
@@ -443,25 +468,15 @@ function Shop() {
 
           {/* Products Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {(isImageSearch && products?.imageSearchResults) ? (
-              // Show image search results
-              Array.isArray(products.imageSearchResults) &&
-              products.imageSearchResults.map((product) => (
-                <ProductCard key={product._id} product={product} />
-              ))
-            ) : (
-              // Show regular products
-              products &&
+            {products &&
               Array.isArray(products.products) &&
               products.products.map((product) => (
                 <ProductCard key={product._id} product={product} />
-              ))
-            )}
+              ))}
           </div>
 
           {/* No Products Message */}
-          {((!isImageSearch && (!products?.products || products.products.length === 0)) || 
-            (isImageSearch && (!products?.imageSearchResults || products.imageSearchResults.length === 0))) && (
+          {(!products?.products || products.products.length === 0) && (
             <div className="text-center py-16">
               <div className="w-32 h-32 bg-[#F8F9FA] rounded-full flex items-center justify-center mx-auto mb-6">
                 <Package className="w-16 h-16 text-[#6C757D]" />
@@ -523,6 +538,18 @@ function Shop() {
           )}
         </div>
       </div>
+
+      {/* Advanced Image Analysis Modal */}
+      {showAdvancedAnalysis && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <AdvancedImageAnalysis
+              onAnalysisComplete={handleAdvancedAnalysisComplete}
+              onClose={() => setShowAdvancedAnalysis(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "@/store/features/cart/cartSlice";
 import { toast } from "react-toastify";
 import { ShoppingCart, Star, Heart, Eye } from "lucide-react";
@@ -7,6 +7,7 @@ import formatNumber from "format-number";
 
 function ProductCard({ product }) {
   const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
   const { _id, title, price, picture, category, discount, averageRating, numOfReviews } = product;
   const pictureUrl = picture?.secure_url || "";
 
@@ -15,14 +16,17 @@ function ProductCard({ product }) {
     e.stopPropagation();
     dispatch(
       addToCart({
-        productId: _id,
-        title,
-        price,
-        pictureUrl,
-        quantity: 1,
+        item: {
+          productId: _id,
+          title,
+          price,
+          pictureUrl,
+          quantity: 1,
+        },
+        userId: user?.user?._id || null,
       })
     );
-    toast.success("Product added to cart successfully!", { autoClose: 1500 });
+    toast.success("Product added to cart successfully!", { autoClose: 2000 });
   };
 
   const discountedPrice = discount > 0 ? price - Math.round((price * discount) / 100) : price;

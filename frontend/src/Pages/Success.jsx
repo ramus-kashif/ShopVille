@@ -86,7 +86,7 @@ function Success() {
 
         if (data.success) {
           console.log("14. Order created successfully");
-          dispatch(clearCart());
+          dispatch(clearCart({ userId: reduxUser?.user?._id || reduxUser?._id || null }));
           toast.success("Payment successful! Order has been created.");
         } else {
           console.error("15. Order creation failed:", data.message);

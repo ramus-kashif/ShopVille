@@ -13,8 +13,27 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { register } from "../store/features/auth/authSlice";
+import { register, setUserFromPhoneRegistration } from "../store/features/auth/authSlice";
+import { loadUserCart } from "../store/features/cart/cartSlice";
 import { UserPlus, Eye, EyeOff, Package, Shield, Truck, Mail, Phone, CheckCircle } from "lucide-react";
+
+// Phone number formatting utility
+const formatPhoneNumber = (value) => {
+  // Remove all non-digits
+  const phoneNumber = value.replace(/\D/g, '');
+  
+  // Limit to 10 digits
+  if (phoneNumber.length > 10) {
+    return phoneNumber.slice(0, 10);
+  }
+  
+  // Add hyphen after 3 digits
+  if (phoneNumber.length >= 3) {
+    return phoneNumber.slice(0, 3) + '-' + phoneNumber.slice(3);
+  }
+  
+  return phoneNumber;
+};
 
 export default function RegisterPage() {
   const [inputValues, setInputValues] = useState({});
@@ -33,7 +52,14 @@ export default function RegisterPage() {
   const handleChange = (e) => {
     const name = e.target.name;
     const value = e.target.value;
-    setInputValues((values) => ({ ...values, [name]: value }));
+    
+    if (name === 'phone') {
+      // Format phone number with automatic hyphen
+      const formattedPhone = formatPhoneNumber(value);
+      setInputValues((values) => ({ ...values, [name]: formattedPhone }));
+    } else {
+      setInputValues((values) => ({ ...values, [name]: value }));
+    }
   };
 
   const handleSubmit = (e) => {
@@ -57,8 +83,15 @@ export default function RegisterPage() {
 
   const handlePhoneRegistration = async (e) => {
     e.preventDefault();
-    if (!inputValues.name || !inputValues.email || !inputValues.phone) {
+    if (!inputValues.name || !inputValues.phone) {
       toast.error("Please fill all required fields");
+      return;
+    }
+    
+    // Validate phone number format
+    const cleanPhone = inputValues.phone.replace(/\D/g, '');
+    if (cleanPhone.length !== 10 || !cleanPhone.startsWith('3')) {
+      toast.error("Please enter a valid Pakistani phone number (3XX-XXXXXXX)");
       return;
     }
     
@@ -67,14 +100,13 @@ export default function RegisterPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          email: inputValues.email, 
           phone: inputValues.phone 
         }),
       });
       const data = await res.json();
       if (data.success) {
         setShowOtpForm(true);
-        toast.success("OTP sent to your email and phone");
+        toast.success("OTP sent to your phone");
       } else {
         toast.error(data.message || "Failed to send OTP");
       }
@@ -93,10 +125,8 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           name: inputValues.name,
-          email: inputValues.email, 
           phone: inputValues.phone,
           password: inputValues.password,
-          otpEmail,
           otpPhone
         }),
       });
@@ -104,8 +134,26 @@ export default function RegisterPage() {
       if (data.success) {
         setOtpStatus('success');
         toast.success("Account created successfully!", { autoClose: 2000 });
+        
+        // Automatically log the user in after successful registration
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('token', data.user.token);
+        
+        // Update Redux state to reflect logged-in status
+        dispatch(setUserFromPhoneRegistration(data.user));
+        
+        // Load user's cart after successful registration
+        if (data.user._id) {
+          dispatch(loadUserCart({ userId: data.user._id }));
+        }
+        
         setTimeout(() => {
-          navigate("/login");
+          // Redirect based on role
+          if (data.user.role === 1) {
+            navigate("/admin");
+          } else {
+            navigate("/shop");
+          }
         }, 2000);
       } else {
         setOtpStatus('error');
@@ -347,35 +395,26 @@ export default function RegisterPage() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-[#1C1C1E] font-medium">
-                      Email Address
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="Enter your email"
-                      required
-                      name="email"
-                      value={inputValues.email || ""}
-                      onChange={handleChange}
-                      className="h-12 rounded-xl border-2 border-[#E0E0E0] focus:border-[#FF6B00] focus:ring-4 focus:ring-[#FF6B00]/10 bg-white text-[#1C1C1E] placeholder-[#6C757D] transition-all duration-200"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
                     <Label htmlFor="phone" className="text-[#1C1C1E] font-medium">
                       Phone Number
                     </Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="03xxxxxxxxx or +923xxxxxxxxx"
-                      required
-                      name="phone"
-                      value={inputValues.phone || ""}
-                      onChange={handleChange}
-                      className="h-12 rounded-xl border-2 border-[#E0E0E0] focus:border-[#FF6B00] focus:ring-4 focus:ring-[#FF6B00]/10 bg-white text-[#1C1C1E] placeholder-[#6C757D] transition-all duration-200"
-                    />
+                    <div className="flex">
+                      <div className="flex items-center px-3 py-2 bg-gray-100 border-2 border-r-0 border-[#E0E0E0] rounded-l-xl text-sm font-medium text-gray-700">
+                        +92
+                      </div>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="3XX-XXXXXXX"
+                        required
+                        name="phone"
+                        value={inputValues.phone || ""}
+                        onChange={handleChange}
+                        className="h-12 rounded-r-xl border-2 border-l-0 border-[#E0E0E0] focus:border-[#FF6B00] focus:ring-4 focus:ring-[#FF6B00]/10 bg-white text-[#1C1C1E] placeholder-[#6C757D] transition-all duration-200"
+                        maxLength={11}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500">Format: 3XX-XXXXXXX (10 digits)</p>
                   </div>
                   
                   <div className="space-y-2">
@@ -441,32 +480,18 @@ export default function RegisterPage() {
               ) : (
                 <form onSubmit={handleOtpVerification} className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="otpEmail" className="text-[#1C1C1E] font-medium">
-                      Email OTP
-                    </Label>
-                    <Input
-                      id="otpEmail"
-                      type="text"
-                      placeholder="Enter email OTP"
-                      required
-                      value={otpEmail}
-                      onChange={(e) => setOtpEmail(e.target.value)}
-                      className="h-12 rounded-xl border-2 border-[#E0E0E0] focus:border-[#FF6B00] focus:ring-4 focus:ring-[#FF6B00]/10 bg-white text-[#1C1C1E] placeholder-[#6C757D] transition-all duration-200"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
                     <Label htmlFor="otpPhone" className="text-[#1C1C1E] font-medium">
                       Phone OTP
                     </Label>
                     <Input
                       id="otpPhone"
                       type="text"
-                      placeholder="Enter phone OTP"
+                      placeholder="Enter 6-digit OTP"
                       required
                       value={otpPhone}
                       onChange={(e) => setOtpPhone(e.target.value)}
                       className="h-12 rounded-xl border-2 border-[#E0E0E0] focus:border-[#FF6B00] focus:ring-4 focus:ring-[#FF6B00]/10 bg-white text-[#1C1C1E] placeholder-[#6C757D] transition-all duration-200"
+                      maxLength={6}
                     />
                   </div>
                   

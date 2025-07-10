@@ -2,6 +2,7 @@ import express from "express";
 import {
   allUsersController,
   loginController,
+  adminLoginController,
   logoutController,
   registerController,
   updateUserController,
@@ -17,7 +18,8 @@ const userRouter = express.Router();
 
 userRouter.post("/register", registerController);
 userRouter.post("/login", loginController);
-userRouter.get("/logout", logoutController);
+userRouter.post("/admin/login", adminLoginController);
+userRouter.post("/logout", logoutController);
 userRouter.patch("/:id", isAuthorized, updateUserController);
 userRouter.put("/:id", isAuthorized, isAdmin, updateUserController);
 userRouter.delete("/:id", isAuthorized, isAdmin, deleteUserController);

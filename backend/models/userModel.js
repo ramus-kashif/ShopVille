@@ -9,18 +9,19 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: true,
+      required: function() {
+        return !this.phone; // Email is required only if not using phone registration
+      },
       trim: true,
       unique: true,
+      sparse: true,
       lowercase: true
     },
     phone: {
       type: String,
-      required: function() {
-        return !this.googleId; // Phone is required only if not using Google OAuth
-      },
       unique: true,
       sparse: true,
+      trim: true,
     },
     password: {
       type: String,

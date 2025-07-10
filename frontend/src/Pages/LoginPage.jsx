@@ -13,8 +13,27 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { login } from "../store/features/auth/authSlice";
+import { login, setUserFromPhoneRegistration } from "../store/features/auth/authSlice";
+import { loadUserCart } from "../store/features/cart/cartSlice";
 import { LogIn, Eye, EyeOff, Package, Shield, Truck, Mail, Phone } from "lucide-react";
+
+// Phone number formatting utility
+const formatPhoneNumber = (value) => {
+  // Remove all non-digits
+  const phoneNumber = value.replace(/\D/g, '');
+  
+  // Limit to 10 digits
+  if (phoneNumber.length > 10) {
+    return phoneNumber.slice(0, 10);
+  }
+  
+  // Add hyphen after 3 digits
+  if (phoneNumber.length >= 3) {
+    return phoneNumber.slice(0, 3) + '-' + phoneNumber.slice(3);
+  }
+  
+  return phoneNumber;
+};
 
 export default function LoginPage() {
   const [inputValues, setInputValues] = useState({});
@@ -31,7 +50,14 @@ export default function LoginPage() {
   const handleChange = (e) => {
     const name = e.target.name;
     const value = e.target.value;
-    setInputValues((values) => ({ ...values, [name]: value }));
+    
+    if (name === 'phone') {
+      // Format phone number with automatic hyphen
+      const formattedPhone = formatPhoneNumber(value);
+      setInputValues((values) => ({ ...values, [name]: formattedPhone }));
+    } else {
+      setInputValues((values) => ({ ...values, [name]: value }));
+    }
   };
 
   const handleSubmit = (e) => {
@@ -62,6 +88,13 @@ export default function LoginPage() {
     e.preventDefault();
     if (!inputValues.phone) {
       toast.error("Please enter your phone number");
+      return;
+    }
+    
+    // Validate phone number format
+    const cleanPhone = inputValues.phone.replace(/\D/g, '');
+    if (cleanPhone.length !== 10 || !cleanPhone.startsWith('3')) {
+      toast.error("Please enter a valid Pakistani phone number (3XX-XXXXXXX)");
       return;
     }
     
@@ -101,8 +134,19 @@ export default function LoginPage() {
         setPhoneLoginStatus('success');
         toast.success("Phone login successful!");
         
-        // Store user data and redirect
+        // Store user data in localStorage and Redux
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('token', data.user.token);
+        
+        // Update Redux state to reflect logged-in status
+        dispatch(setUserFromPhoneRegistration(data.user));
+        
+        // Load user's cart after successful login
+        if (data.user._id) {
+          dispatch(loadUserCart({ userId: data.user._id }));
+        }
+        
+        // Redirect based on role
         if (data.user.role === 1) {
           navigate("/admin");
         } else {
@@ -119,11 +163,29 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
+    // Check if Google OAuth credentials are configured
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId || clientId === 'your_google_client_id_here') {
+      toast.error(
+        <div>
+          <p>Google OAuth is not configured.</p>
+          <p className="text-sm mt-1">Please add VITE_GOOGLE_CLIENT_ID to your .env file</p>
+        </div>,
+        { autoClose: 5000 }
+      );
+      return;
+    }
+
     // Initialize Google OAuth
-    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${import.meta.env.VITE_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(window.location.origin + '/auth/google/callback')}&response_type=code&scope=openid%20email%20profile&access_type=offline`;
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(window.location.origin + '/auth/google/callback')}&response_type=code&scope=openid%20email%20profile&access_type=offline`;
     
     // Open Google OAuth popup
     const popup = window.open(googleAuthUrl, 'googleOAuth', 'width=500,height=600,scrollbars=yes,resizable=yes');
+    
+    if (!popup) {
+      toast.error("Please allow popups to use Google login");
+      return;
+    }
     
     // Listen for the callback
     const checkClosed = setInterval(() => {
@@ -135,11 +197,12 @@ export default function LoginPage() {
     }, 1000);
     
     // Listen for message from popup
-    window.addEventListener('message', (event) => {
+    const messageHandler = (event) => {
       if (event.origin !== window.location.origin) return;
       
       if (event.data.type === 'GOOGLE_OAUTH_SUCCESS') {
         clearInterval(checkClosed);
+        window.removeEventListener('message', messageHandler);
         popup.close();
         
         // Handle successful Google login
@@ -155,10 +218,13 @@ export default function LoginPage() {
         }
       } else if (event.data.type === 'GOOGLE_OAUTH_ERROR') {
         clearInterval(checkClosed);
+        window.removeEventListener('message', messageHandler);
         popup.close();
         toast.error(event.data.error || 'Google login failed');
       }
-    });
+    };
+    
+    window.addEventListener('message', messageHandler);
   };
 
   return (
@@ -295,34 +361,35 @@ export default function LoginPage() {
                 </div>
               </CardContent>
               
-              <CardFooter className="pt-6 space-y-4">
-                <Button
-                  type="submit"
-                  className="w-full h-12 bg-[#FF6B00] hover:bg-[#E55A00] text-white font-semibold rounded-xl text-lg shadow-lg transition-all duration-300 transform hover:scale-105"
-                  disabled={status == "loading"}
-                >
-                  {status == "loading" ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      Signing in...
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-center gap-2">
-                      <LogIn className="w-5 h-5" />
-                      Sign In
-                    </span>
-                  )}
-                </Button>
-                
-                {/* Divider */}
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-[#E0E0E0]" />
+              <CardFooter className="pt-6">
+                <div className="w-full space-y-4">
+                  <Button
+                    type="submit"
+                    className="w-full h-12 bg-[#FF6B00] hover:bg-[#E55A00] text-white font-semibold rounded-xl text-lg shadow-lg transition-all duration-300 transform hover:scale-105"
+                    disabled={status == "loading"}
+                  >
+                    {status == "loading" ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        Signing in...
+                      </span>
+                    ) : (
+                      <span className="flex items-center justify-center gap-2">
+                        <LogIn className="w-5 h-5" />
+                        Sign In
+                      </span>
+                    )}
+                  </Button>
+                  
+                  {/* Divider */}
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-[#E0E0E0]" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-[#6C757D]">Or continue with</span>
+                    </div>
                   </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-[#6C757D]">Or continue with</span>
-                  </div>
-                </div>
                 
                 {/* Google OAuth Button */}
                 <Button
@@ -340,6 +407,7 @@ export default function LoginPage() {
                     Continue with Google
                   </span>
                 </Button>
+                </div>
               </CardFooter>
             </form>
           ) : (
@@ -364,16 +432,23 @@ export default function LoginPage() {
                     <Label htmlFor="phone" className="text-[#1C1C1E] font-medium">
                       Phone Number
                     </Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="03xxxxxxxxx or +923xxxxxxxxx"
-                      required
-                      name="phone"
-                      value={inputValues.phone || ""}
-                      onChange={handleChange}
-                      className="h-12 rounded-xl border-2 border-[#E0E0E0] focus:border-[#FF6B00] focus:ring-4 focus:ring-[#FF6B00]/10 bg-white text-[#1C1C1E] placeholder-[#6C757D] transition-all duration-200"
-                    />
+                    <div className="flex">
+                      <div className="flex items-center px-3 py-2 bg-gray-100 border-2 border-r-0 border-[#E0E0E0] rounded-l-xl text-sm font-medium text-gray-700">
+                        +92
+                      </div>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="3XX-XXXXXXX"
+                        required
+                        name="phone"
+                        value={inputValues.phone || ""}
+                        onChange={handleChange}
+                        className="h-12 rounded-r-xl border-2 border-l-0 border-[#E0E0E0] focus:border-[#FF6B00] focus:ring-4 focus:ring-[#FF6B00]/10 bg-white text-[#1C1C1E] placeholder-[#6C757D] transition-all duration-200"
+                        maxLength={11}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500">Format: 3XX-XXXXXXX (10 digits)</p>
                   </div>
                   
                   <Button
@@ -451,6 +526,10 @@ export default function LoginPage() {
               <span>•</span>
               <Link to="/contact" className="hover:text-[#FF6B00] transition-colors duration-200">
                 Need Help?
+              </Link>
+              <span>•</span>
+              <Link to="/admin/login" className="hover:text-[#FF6B00] transition-colors duration-200">
+                Admin Login
               </Link>
             </div>
           </div>

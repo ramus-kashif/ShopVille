@@ -12,6 +12,24 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
+// Phone number formatting utility
+const formatPhoneNumber = (value) => {
+  // Remove all non-digits
+  const phoneNumber = value.replace(/\D/g, '');
+  
+  // Limit to 10 digits
+  if (phoneNumber.length > 10) {
+    return phoneNumber.slice(0, 10);
+  }
+  
+  // Add hyphen after 3 digits
+  if (phoneNumber.length >= 3) {
+    return phoneNumber.slice(0, 3) + '-' + phoneNumber.slice(3);
+  }
+  
+  return phoneNumber;
+};
+
 function Users() {
   const [users, setUsers] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
@@ -19,6 +37,7 @@ function Users() {
     name: "",
     email: "",
     password: "",
+    phone: "",
     role: 0,
   });
   const [showModal, setShowModal] = useState(false);
@@ -52,13 +71,25 @@ function Users() {
       return;
     }
     setEditingUser(user);
-    setFormData({ name: user.name, email: user.email, role: user.role });
+    setFormData({ 
+      name: user.name, 
+      email: user.email, 
+      phone: user.phone ? formatPhoneNumber(user.phone.replace(/\D/g, '')) : "", 
+      role: user.role 
+    });
     setShowModal(true);
   };
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    if (name === 'phone') {
+      // Format phone number with automatic hyphen
+      const formattedPhone = formatPhoneNumber(value);
+      setFormData((prev) => ({ ...prev, [name]: formattedPhone }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleDeleteUser = async (userId) => {
@@ -131,7 +162,7 @@ function Users() {
           className="w-full md:w-auto"
           onClick={() => {
             setEditingUser(null);
-            setFormData({ name: "", email: "", password: "", role: 0 });
+            setFormData({ name: "", email: "", password: "", phone: "", role: 0 });
             setShowModal(true);
           }}
         >
@@ -145,6 +176,7 @@ function Users() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
                 <TableHead className="text-center">Role</TableHead>
                 <TableHead>Created At</TableHead>
                 <TableHead className="text-center">Actions</TableHead>
@@ -153,7 +185,7 @@ function Users() {
             <TableBody>
               {users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan="5" className="text-center py-4">
+                  <TableCell colSpan="6" className="text-center py-4">
                     No users found.
                   </TableCell>
                 </TableRow>
@@ -168,6 +200,9 @@ function Users() {
                     </TableCell>
                     <TableCell className="text-gray-700">
                       {user.email}
+                    </TableCell>
+                    <TableCell className="text-gray-700">
+                      {user.phone ? `+92 ${user.phone}` : "N/A"}
                     </TableCell>
                     <TableCell className="text-center">
                       <span
@@ -280,6 +315,24 @@ function Users() {
                   className="w-full border rounded px-3 py-2"
                   required
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Phone Number</label>
+                <div className="flex">
+                  <div className="flex items-center px-3 py-2 bg-gray-100 border border-r-0 rounded-l-md text-sm font-medium text-gray-700">
+                    +92
+                  </div>
+                  <Input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleFormChange}
+                    className="w-full border rounded-r-md px-3 py-2"
+                    placeholder="3XX-XXXXXXX"
+                    maxLength={11}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Format: 3XX-XXXXXXX (10 digits)</p>
               </div>
               {!editingUser && (
                 <div>

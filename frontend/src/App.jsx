@@ -1,7 +1,10 @@
 import { Routes, Route, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { loadUserCart, initializeCart } from "./store/features/cart/cartSlice";
 import RegisterPage from "./Pages/RegisterPage";
-import { ToastContainer } from "react-toastify";
 import LoginPage from "./Pages/LoginPage";
+import AdminLogin from "./Pages/Admin/AdminLogin";
 import HomePage from "./Pages/HomePage";
 import DashboardLayout from "./Pages/Admin/DashboardLayout";
 import Dashboard from "./Pages/Admin/Dashboard";
@@ -27,12 +30,31 @@ import Success from "./Pages/Success";
 import Cancel from "./Pages/Cancel";
 import OrderPage from "./Pages/OrderPage";
 import GoogleAuthCallback from "./Pages/GoogleAuthCallback";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const location = useLocation();
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
   const isAdmin = location.pathname.startsWith("/admin");
   // Hide Navbar on login and register pages
-  const hideNavbar = ["/login", "/register"].includes(location.pathname);
+  const hideNavbar = ["/login", "/register", "/admin/login"].includes(location.pathname);
+
+  // Initialize cart on app start
+  useEffect(() => {
+    if (user?.user?._id) {
+      dispatch(initializeCart({ userId: user.user._id }));
+    }
+  }, []); // Only run once on mount
+
+  // Load user's cart when user changes
+  useEffect(() => {
+    if (user?.user?._id) {
+      dispatch(loadUserCart({ userId: user.user._id }));
+    }
+  }, [user, dispatch]);
+
   return (
     <>
       {!isAdmin && !hideNavbar && <Navbar />}
@@ -60,6 +82,7 @@ function App() {
         />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/orders" element={<OrderPage />} />
@@ -91,7 +114,7 @@ function App() {
         </Route>
       </Routes>
       {!isAdmin && <Footer />}
-      <ToastContainer />
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover />
     </>
   );
 }

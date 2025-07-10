@@ -23,6 +23,7 @@ function ProductDetails() {
   const products = useSelector((state) => state.products.products);
   const status = useSelector((state) => state.products.status);
   const error = useSelector((state) => state.products.error);
+  const user = useSelector((state) => state.auth.user);
 
   const handleDecrement = () => {
     setQuantity((prevQuantity) => (prevQuantity > 1 ? prevQuantity - 1 : 1));
@@ -34,14 +35,25 @@ function ProductDetails() {
   const handleAddToCart = () => {
     dispatch(
       addToCart({
-        productId,
-        title,
-        price,
-        pictureUrl,
-        quantity,
+        item: {
+          productId,
+          title,
+          price,
+          pictureUrl,
+          quantity,
+        },
+        userId: user?.user?._id || null,
       })
     );
-    toast.success("Product added to cart successfully!", { autoClose: 1500 });
+    toast.success("Product added to cart successfully!", {
+      position: "bottom-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
   };
 
   useEffect(() => {
