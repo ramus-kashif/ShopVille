@@ -63,19 +63,8 @@ export const updateSingleProduct = createAsyncThunk(
 
 export const searchProducts = createAsyncThunk(
   "products/searchProducts",
-  async ({ search = "", page = 1, limit = 8, category = "", imageSearchResults = null }, thunkAPI) => {
+  async ({ search = "", page = 1, limit = 8, category = "" }, thunkAPI) => {
     try {
-      // If imageSearchResults is provided, return it directly
-      if (imageSearchResults) {
-        return {
-          products: imageSearchResults,
-          total: imageSearchResults.length,
-          page: 1,
-          limit: imageSearchResults.length,
-          isImageSearch: true
-        };
-      }
-      
       const response = await productService.searchProducts({ search, page, limit, category });
       return response;
     } catch (error) {

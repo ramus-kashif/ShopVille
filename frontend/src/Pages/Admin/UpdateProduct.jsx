@@ -167,6 +167,18 @@ function UpdateProduct() {
                     />
                   </div>
                   <div className="grid gap-3">
+                    <Label htmlFor="stock">Stock</Label>
+                    <Input
+                      type="number"
+                      id="stock"
+                      placeholder="Enter available stock"
+                      name="stock"
+                      min={0}
+                      value={inputValues.stock || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
+                  <div className="grid gap-3">
                     <Label htmlFor="category">Category</Label>
                     <Select
                       value={inputValues.category || ""}

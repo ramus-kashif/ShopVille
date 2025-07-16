@@ -18,6 +18,9 @@ productRouter.get("/", getAllProductsController);
 // http://localhost:8080/api/v1/products/search?search=...&page=...&limit=...
 productRouter.get("/search", getPaginatedProductsController);
 
+// http://localhost:8080/api/v1/products/all - GET
+productRouter.get("/all", getAllProductsController);
+
 // Admin Routes
 
 // http://localhost:8080/api/v1/products/ - POST

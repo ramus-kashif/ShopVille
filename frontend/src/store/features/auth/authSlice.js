@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import authService from "./authService.js";
-import { loadUserCart } from "../cart/cartSlice.js";
+import { loadUserCart, fetchUserCart } from "../cart/cartSlice.js";
 // use this function in registerPage
 export const register = createAsyncThunk(
   "auth/register",
@@ -26,6 +26,14 @@ export const login = createAsyncThunk(
       if (response.user?._id) {
         console.log("Login: Loading cart for user:", response.user._id);
         thunkAPI.dispatch(loadUserCart({ userId: response.user._id }));
+        
+        // Also fetch backend cart to sync with Redux state
+        try {
+          console.log("Login: Fetching backend cart for user:", response.user._id);
+          thunkAPI.dispatch(fetchUserCart());
+        } catch (error) {
+          console.error("Login: Failed to fetch backend cart:", error);
+        }
       }
       
       return response;

@@ -3,10 +3,13 @@ import {
   uploadImageOnCloudinary,
 } from "../helper/cloudinaryHelper.js";
 import productsModel from "../models/productsModel.js";
+import Cart from '../models/cartModel.js';
+import { io } from '../server.js';
+import { sendEmail } from '../utils/emailHandler.js';
 
 const addProductController = async (req, res) => {
   try {
-    const { title, description, category, price, discount } = req.body;
+    const { title, description, category, price, discount, stock } = req.body;
     const picture = req.file.fieldname;
     const picturePath = req.file?.path;
 
@@ -16,11 +19,12 @@ const addProductController = async (req, res) => {
       !category ||
       !price ||
       !picture ||
-      !picturePath
+      !picturePath ||
+      stock === undefined
     ) {
       return res
         .status(400)
-        .send({ success: false, message: "All feilds are required" });
+        .send({ success: false, message: "All fields are required" });
     }
     //Uploading image on cloudinary
     const { secure_url, public_id } = await uploadImageOnCloudinary(
@@ -41,6 +45,7 @@ const addProductController = async (req, res) => {
       category,
       price,
       discount: discount || 0,
+      stock: Number(stock),
       user: req.user._id,
       picture: { secure_url, public_id },
     });
@@ -146,7 +151,7 @@ const getSingleProductController = async (req, res) => {
 const updateSingleProductController = async (req, res) => {
   try {
     const { productId } = req.params;
-    const { title, description, category, price, discount } = req.body;
+    const { title, description, category, price, discount, stock } = req.body;
     // const picture = req.file.fieldname;
     const picturePath = req.file?.path;
     const product = await productsModel.findById(productId);
@@ -157,11 +162,15 @@ const updateSingleProductController = async (req, res) => {
       });
     }
 
+    // Track old price for alert
+    const oldPrice = product.price;
+
     if (title) product.title = title;
     if (description) product.description = description;
     if (category) product.category = category;
     if (price) product.price = price;
     if (discount !== undefined) product.discount = discount;
+    if (stock !== undefined) product.stock = Number(stock);
     if (picturePath) {
       // Uploading new image on cloudinary
       const { secure_url, public_id } = await uploadImageOnCloudinary(
@@ -183,6 +192,33 @@ const updateSingleProductController = async (req, res) => {
       }
       product.picture = { secure_url, public_id };
       await product.save();
+      // === PRICE ALERT LOGIC ===
+      if (price && Number(price) < oldPrice) {
+        // Find all carts with this product
+        const carts = await Cart.find({ 'items.productId': productId }).populate('userId');
+        for (const cart of carts) {
+          const user = cart.userId;
+          if (user && user.email) {
+            io.to(user._id.toString()).emit('priceAlert', {
+              productId,
+              newPrice: Number(price),
+              oldPrice,
+              title: product.title,
+            });
+            // Send email (optional - won't break if email fails)
+            try {
+              await sendEmail({
+                to: user.email,
+                subject: `Price Alert: ${product.title}`,
+                text: `The price of ${product.title} has dropped from PKR ${oldPrice} to PKR ${price}.`,
+                html: `<p>The price of <b>${product.title}</b> has dropped from <b>PKR ${oldPrice}</b> to <b>PKR ${price}</b>.</p>`,
+              });
+            } catch (emailError) {
+              console.error('Email sending failed:', emailError);
+            }
+          }
+        }
+      }
       return res.status(200).send({
         success: true,
         message: "Product updated successfully",
@@ -190,6 +226,33 @@ const updateSingleProductController = async (req, res) => {
       });
     } else {
       await product.save();
+      // === PRICE ALERT LOGIC ===
+      if (price && Number(price) < oldPrice) {
+        // Find all carts with this product
+        const carts = await Cart.find({ 'items.productId': productId }).populate('userId');
+        for (const cart of carts) {
+          const user = cart.userId;
+          if (user && user.email) {
+            io.to(user._id.toString()).emit('priceAlert', {
+              productId,
+              newPrice: Number(price),
+              oldPrice,
+              title: product.title,
+            });
+            // Send email (optional - won't break if email fails)
+            try {
+              await sendEmail({
+                to: user.email,
+                subject: `Price Alert: ${product.title}`,
+                text: `The price of ${product.title} has dropped from PKR ${oldPrice} to PKR ${price}.`,
+                html: `<p>The price of <b>${product.title}</b> has dropped from <b>PKR ${oldPrice}</b> to <b>PKR ${price}</b>.</p>`,
+              });
+            } catch (emailError) {
+              console.error('Email sending failed:', emailError);
+            }
+          }
+        }
+      }
       return res.status(200).send({
         success: true,
         message: "Product updated successfully",

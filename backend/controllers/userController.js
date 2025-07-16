@@ -148,6 +148,7 @@ const allUsersController = async (req, res) => {
   }
 };
 const updateUserController = async (req, res) => {
+  console.log("PATCH /api/v1/users/:id hit");
   try {
     console.log("=== UPDATE USER DEBUG START ===");
     console.log("1. Request params:", req.params);

@@ -1,12 +1,14 @@
 import ProductCard from "@/components/ProductCard";
 import { searchProducts } from "@/store/features/products/productSlice";
 import { getAllCategories, setSelectedCategory } from "@/store/features/categories/categoriesSlice";
+import { updateCartPrices } from "@/store/features/cart/cartSlice";
 import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Package, Filter, Search, Camera, Star, Shield, Truck, CreditCard, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Package, Filter, Search, Star, Shield, Truck, CreditCard, Sparkles } from "lucide-react";
 import { toast } from "react-toastify";
-import AdvancedImageAnalysis from "@/components/AdvancedImageAnalysis";
+import Chatbot from "@/components/Chatbot";
+import Navbar from "@/components/Navbar";
 
 function Shop() {
   const products = useSelector((state) => state.products.products);
@@ -22,13 +24,13 @@ function Shop() {
   const [showCategories, setShowCategories] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
-  const [isImageSearch, setIsImageSearch] = useState(false);
-  const [uploadedImage, setUploadedImage] = useState(null);
-  const [imageSearchLoading, setImageSearchLoading] = useState(false);
-  const [showAdvancedAnalysis, setShowAdvancedAnalysis] = useState(false);
   const pageSize = 8;
   const recognitionRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
+  const fileInputRef = useRef();
+  const [imageSearchLoading, setImageSearchLoading] = useState(false);
+  const [imageSearchMessage, setImageSearchMessage] = useState("");
+  const [imageSearchFallback, setImageSearchFallback] = useState(false);
 
   // Carousel state - will be fetched from backend
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -44,6 +46,13 @@ function Shop() {
     dispatch(getAllCategories());
     fetchCarouselImages();
   }, [dispatch]);
+
+  // Update cart prices when products are loaded
+  useEffect(() => {
+    if (products && products.products && Array.isArray(products.products)) {
+      dispatch(updateCartPrices({ products: products.products }));
+    }
+  }, [products, dispatch]);
 
   // Auto-advance carousel
   useEffect(() => {
@@ -123,51 +132,6 @@ function Shop() {
     }));
   };
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setUploadedImage(file);
-      performEnhancedImageSearch(file);
-    }
-  };
-
-  const performEnhancedImageSearch = async (file) => {
-    setImageSearchLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append('image', file);
-
-      const response = await fetch('http://localhost:8080/api/v1/search', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (data.success) {
-        dispatch(searchProducts({ 
-          search: "", 
-          page: 1, 
-          limit: pageSize, 
-          category: selectedCategory,
-          imageSearchResults: data.products 
-        }));
-        setIsImageSearch(true);
-        toast.success(`Found ${data.products.length} similar products!`);
-      } else {
-        toast.error("Image search failed. Please try again.");
-      }
-    } catch (error) {
-      console.error("Enhanced image search error:", error);
-      toast.error("Image search error. Please try again.");
-    } finally {
-      setImageSearchLoading(false);
-    }
-  };
-
   // Voice search logic
   const handleVoiceSearch = () => {
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
@@ -198,19 +162,42 @@ function Shop() {
     recognitionRef.current.start();
   };
 
-  const handleAdvancedAnalysisComplete = (searchTerms) => {
-    if (searchTerms && searchTerms.length > 0) {
-      const combinedTerms = searchTerms.join(' ');
-      setSearch(combinedTerms);
-      setPage(1);
-      dispatch(searchProducts({ 
-        search: combinedTerms, 
-        page: 1, 
-        limit: pageSize, 
-        category: selectedCategory 
-      }));
-      setShowAdvancedAnalysis(false);
-      toast.success(`Searching for: ${combinedTerms}`);
+  const handleImageIconClick = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
+
+  const handleImageSearch = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImageSearchLoading(true);
+    setShowSearchResults(false);
+    setSearchResults([]);
+    setSearch("");
+    setImageSearchMessage("");
+    setImageSearchFallback(false);
+
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      const response = await fetch("http://localhost:8080/api/v1/image-search", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setSearchResults(data.products || []);
+        setShowSearchResults(true);
+        setImageSearchMessage(data.message || "Image search complete.");
+        setImageSearchFallback(data.fallbackUsed || false);
+        toast.success(data.message || "Image search complete");
+      } else {
+        toast.error(data.message || "Image search failed");
+      }
+    } catch (err) {
+      toast.error("Image search failed. Please try again.");
+    } finally {
+      setImageSearchLoading(false);
     }
   };
 
@@ -240,8 +227,70 @@ function Shop() {
   }
 
   return (
-    <div className="min-h-screen bg-white pt-20">
-      <div className="container mx-auto py-8 px-4">
+    <div className="min-h-screen bg-white relative">
+      {/* Overlay Navbar at the top of the carousel */}
+      <Navbar />
+      {/* Image Carousel */}
+      <div className="relative mb-16 w-full">
+        <div className="relative h-[500px] lg:h-[600px] w-full overflow-hidden shadow-lg">
+          {carouselImages.map((image, index) => (
+            <div
+              key={index}
+              className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+                index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+              }`}
+            >
+              <img
+                src={image}
+                alt={`Carousel slide ${index + 1}`}
+                className="w-full h-full object-cover"
+                style={{ minWidth: '100vw', maxWidth: '100vw' }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+              <div className="absolute bottom-16 left-16 right-16 text-white">
+                <h2 className="text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+                  Discover Amazing Products
+                </h2>
+                <p className="text-2xl lg:text-3xl opacity-90 max-w-3xl mb-8">
+                  Find the perfect items for your lifestyle with our curated collection
+                </p>
+                <div className="flex gap-4">
+                  <Link 
+                    to="/shop" 
+                    className="inline-flex items-center gap-3 bg-[#FF6B00] hover:bg-[#FF8C42] text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  >
+                    Shop Now
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </Link>
+                  <Link 
+                    to="/shop" 
+                    className="inline-flex items-center gap-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 border border-white/30 hover:border-white/50"
+                  >
+                    View Categories
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ))}
+          {/* Modern Carousel Indicators */}
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-4">
+            {carouselImages.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`w-4 h-4 rounded-full border-2 border-white transition-all duration-300 ${
+                  index === currentSlide ? 'bg-[#FF6B00] border-[#FF6B00] scale-110 shadow-lg' : 'bg-white/40 border-white/60'
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+      {/* Main Content with top padding to prevent overlap */}
+      <div className="pt-12">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-5xl font-extrabold text-[#1C1C1E] mb-4">
@@ -272,31 +321,24 @@ function Shop() {
                 style={{ fontSize: '1.1rem' }}
               />
               
-              {/* Enhanced Image Search Button */}
-              <label className="ml-4 flex items-center justify-center bg-[#F8F9FA] hover:bg-[#EDEDED] rounded-lg w-14 h-14 transition-all duration-200 focus:outline-none cursor-pointer border border-[#E0E0E0] hover:border-[#FF6B00]">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-                {imageSearchLoading ? (
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#FF6B00]"></div>
-                ) : (
-                  <Camera className="w-6 h-6 text-[#6C757D] hover:text-[#FF6B00]" />
-                )}
-              </label>
-              
-              {/* Advanced Image Analysis Button */}
+              {/* AI Image Search Icon */}
               <button
                 type="button"
-                onClick={() => setShowAdvancedAnalysis(true)}
-                className="ml-4 flex items-center justify-center bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg w-14 h-14 transition-all duration-200 focus:outline-none shadow-md hover:shadow-lg"
-                title="Advanced Image Analysis"
+                onClick={handleImageIconClick}
+                className="ml-4 flex items-center justify-center bg-[#F8F9FA] hover:bg-[#EDEDED] rounded-lg w-14 h-14 transition-all duration-200 focus:outline-none border border-[#E0E0E0] hover:border-[#FF6B00] text-[#6C757D] hover:text-[#FF6B00]"
+                tabIndex={-1}
+                aria-label="AI Image Search"
+                title="Search by Image (AI)"
               >
                 <Sparkles className="w-6 h-6" />
               </button>
-              
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                style={{ display: "none" }}
+                onChange={handleImageSearch}
+              />
               <button
                 type="button"
                 onClick={handleVoiceSearch}
@@ -336,88 +378,149 @@ function Shop() {
                 ))}
               </div>
             )}
+            {/* AI Image Search Loading */}
+            {imageSearchLoading && (
+              <div className="absolute top-full left-0 right-0 bg-white border border-[#E0E0E0] rounded-xl shadow-lg z-50 mt-4 p-6 text-center text-[#FF6B00] font-semibold">
+                <div className="flex items-center justify-center gap-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#FF6B00]"></div>
+                  Searching by image...
+                </div>
+              </div>
+            )}
           </form>
         </div>
 
-        {/* Image Carousel */}
-        <div className="relative mb-16 max-w-7xl mx-auto">
-          <div className="relative h-[500px] lg:h-[600px] rounded-3xl overflow-hidden shadow-lg">
-            {carouselImages.map((image, index) => (
-              <div
-                key={index}
-                className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
-                  index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
-                }`}
-              >
-                <img
-                  src={image}
-                  alt={`Carousel slide ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-                <div className="absolute bottom-16 left-16 right-16 text-white">
-                  <h2 className="text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-                    Discover Amazing Products
-                  </h2>
-                  <p className="text-2xl lg:text-3xl opacity-90 max-w-3xl mb-8">
-                    Find the perfect items for your lifestyle with our curated collection
-                  </p>
-                  <div className="flex gap-4">
-                    <Link 
-                      to="/shop" 
-                      className="inline-flex items-center gap-3 bg-[#FF6B00] hover:bg-[#FF8C42] text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                    >
-                      Shop Now
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                      </svg>
-                    </Link>
-                    <Link 
-                      to="/shop" 
-                      className="inline-flex items-center gap-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 border border-white/30 hover:border-white/50"
-                    >
-                      View Categories
-                    </Link>
+        {/* Products Section - moved up for better accessibility */}
+        <div className="w-full mb-16">
+          {/* Image Search Results - New prominent display */}
+          {imageSearchMessage && (
+            <div className="mb-8 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-gray-800">AI Image Search Results</h3>
+                    <p className="text-xs text-gray-600">
+                      {imageSearchMessage}
+                      {imageSearchFallback && (
+                        <span className="ml-2 text-yellow-600 font-medium">(Fallback method used)</span>
+                      )}
+                    </p>
                   </div>
                 </div>
-              </div>
-            ))}
-            
-            {/* Modern Carousel Indicators */}
-            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-4">
-              {carouselImages.map((_, index) => (
                 <button
-                  key={index}
-                  onClick={() => setCurrentSlide(index)}
-                  className={`w-4 h-4 rounded-full transition-all duration-300 ${
-                    index === currentSlide 
-                      ? 'bg-[#FF6B00] scale-125 shadow-lg' 
-                      : 'bg-white/50 hover:bg-white/75 hover:scale-110'
-                  }`}
-                />
-              ))}
+                  onClick={() => {
+                    setImageSearchMessage("");
+                    setImageSearchFallback(false);
+                    // Reset to show all products
+                    dispatch(searchProducts({ search: "", page: 1, limit: pageSize }));
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label="Close image search results"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              {/* Show the found products in a minimized, focused grid */}
+              {products?.products && products.products.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {products.products.map((product) => (
+                    <Link key={product._id} to={`/product/${product._id}`} className="block bg-white rounded-lg p-2 border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
+                      <img
+                        src={product.picture?.secure_url || "/placeholder.png"}
+                        alt={product.title}
+                        className="w-full h-24 object-cover rounded mb-2"
+                      />
+                      <h4 className="font-semibold text-gray-800 text-sm mb-1 truncate">{product.title}</h4>
+                      <p className="text-xs text-gray-600 mb-1 truncate">{product.category?.name}</p>
+                      <p className="text-[#FF6B00] font-bold text-sm">PKR {product.price}</p>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-gray-500 py-8">No products found for this image.</div>
+              )}
             </div>
-          </div>
-        </div>
+          )}
 
-        {/* Image Search Results Indicator */}
-        {isImageSearch && (
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-3 bg-[#FF6B00]/10 text-[#FF6B00] px-6 py-3 rounded-full border border-[#FF6B00]/20">
-              <Camera className="w-5 h-5" />
-              <span className="font-semibold">Showing image search results</span>
-              <button
-                onClick={() => {
-                  setIsImageSearch(false);
-                  dispatch(searchProducts({ search: "", page: 1, limit: pageSize, category: selectedCategory }));
-                }}
-                className="ml-3 text-[#FF6B00] hover:text-[#FF8C42] transition-colors"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-        )}
+          {/* Hide the rest of the product grid/info when image search is active */}
+          {!imageSearchMessage && (
+            <>
+              {/* Results Info */}
+              <div className="flex items-center justify-between mb-8">
+                <div className="text-[#6C757D]">
+                  Showing {products?.products?.length || 0} of {total} products
+                  {selectedCategory && (
+                    <span className="ml-3 text-[#FF6B00] font-semibold">
+                      • Filtered by category
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Products Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {products &&
+                  Array.isArray(products.products) &&
+                  products.products.map((product) => (
+                    <ProductCard key={product._id} product={product} />
+                  ))}
+              </div>
+
+              {/* No Products Message */}
+              {(!products?.products || products.products.length === 0) && (
+                <div className="text-center py-16">
+                  <div className="w-32 h-32 bg-[#F8F9FA] rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Package className="w-16 h-16 text-[#6C757D]" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-[#1C1C1E] mb-3">
+                    No Products Found
+                  </h3>
+                  <p className="text-[#6C757D] mb-6">
+                    Try adjusting your search or category filter
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSearch("");
+                      dispatch(setSelectedCategory(""));
+                      dispatch(searchProducts({ search: "", page: 1, limit: pageSize }));
+                    }}
+                    className="bg-[#FF6B00] hover:bg-[#FF8C42] text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              )}
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex justify-center mt-16 gap-3">
+                  <button
+                    onClick={() => handlePageChange(Math.max(1, page - 1))}
+                    disabled={page === 1}
+                    className="px-6 py-3 rounded-xl bg-[#F8F9FA] hover:bg-[#EDEDED] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-[#1C1C1E] border border-[#E0E0E0] hover:border-[#FF6B00]"
+                  >
+                    Previous
+                  </button>
+                  <span className="px-4 py-3 text-[#6C757D] font-semibold">
+                    Page {page} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
+                    disabled={page === totalPages}
+                    className="px-6 py-3 rounded-xl bg-[#F8F9FA] hover:bg-[#EDEDED] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-[#1C1C1E] border border-[#E0E0E0] hover:border-[#FF6B00]"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
         {/* Features Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
@@ -443,113 +546,10 @@ function Shop() {
             <p className="text-[#6C757D]">Multiple secure payment options</p>
           </div>
         </div>
-
-        {/* Products Section */}
-        <div className="w-full">
-          {/* Results Info */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="text-[#6C757D]">
-              Showing {products?.products?.length || 0} of {isImageSearch 
-                ? (products?.products?.length || 0) 
-                : total
-              } products
-              {selectedCategory && !isImageSearch && (
-                <span className="ml-3 text-[#FF6B00] font-semibold">
-                  • Filtered by category
-                </span>
-              )}
-              {isImageSearch && (
-                <span className="ml-3 text-[#FF6B00] font-semibold">
-                  • Image search results
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Products Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {products &&
-              Array.isArray(products.products) &&
-              products.products.map((product) => (
-                <ProductCard key={product._id} product={product} />
-              ))}
-          </div>
-
-          {/* No Products Message */}
-          {(!products?.products || products.products.length === 0) && (
-            <div className="text-center py-16">
-              <div className="w-32 h-32 bg-[#F8F9FA] rounded-full flex items-center justify-center mx-auto mb-6">
-                <Package className="w-16 h-16 text-[#6C757D]" />
-              </div>
-              <h3 className="text-2xl font-bold text-[#1C1C1E] mb-3">
-                {isImageSearch ? "No Similar Products Found" : "No Products Found"}
-              </h3>
-              <p className="text-[#6C757D] mb-6">
-                {isImageSearch 
-                  ? "Try uploading a different image or search with keywords" 
-                  : "Try adjusting your search or category filter"
-                }
-              </p>
-              <button
-                onClick={() => {
-                  setSearch("");
-                  setIsImageSearch(false);
-                  dispatch(setSelectedCategory(""));
-                  dispatch(searchProducts({ search: "", page: 1, limit: pageSize }));
-                }}
-                className="bg-[#FF6B00] hover:bg-[#FF8C42] text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300"
-              >
-                Clear Filters
-              </button>
-            </div>
-          )}
-
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex justify-center mt-16 gap-3">
-              <button
-                onClick={() => handlePageChange(Math.max(1, page - 1))}
-                disabled={page === 1}
-                className="px-6 py-3 rounded-xl bg-[#F8F9FA] hover:bg-[#EDEDED] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-[#1C1C1E] border border-[#E0E0E0] hover:border-[#FF6B00]"
-              >
-                Previous
-              </button>
-              {[...Array(totalPages)].map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handlePageChange(idx + 1)}
-                  className={`px-6 py-3 rounded-xl transition-all duration-200 ${
-                    page === idx + 1
-                      ? "bg-[#FF6B00] text-white shadow-lg"
-                      : "bg-[#F8F9FA] hover:bg-[#EDEDED] text-[#1C1C1E] border border-[#E0E0E0] hover:border-[#FF6B00]"
-                  }`}
-                >
-                  {idx + 1}
-                </button>
-              ))}
-              <button
-                onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
-                disabled={page === totalPages}
-                className="px-6 py-3 rounded-xl bg-[#F8F9FA] hover:bg-[#EDEDED] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-[#1C1C1E] border border-[#E0E0E0] hover:border-[#FF6B00]"
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </div>
       </div>
 
-      {/* Advanced Image Analysis Modal */}
-      {showAdvancedAnalysis && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <AdvancedImageAnalysis
-              onAnalysisComplete={handleAdvancedAnalysisComplete}
-              onClose={() => setShowAdvancedAnalysis(false)}
-            />
-          </div>
-        </div>
-      )}
+      {/* Vill-E Chatbot Floating Button and Panel */}
+      <Chatbot />
     </div>
   );
 }

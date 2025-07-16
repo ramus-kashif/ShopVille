@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useSelector, useDispatch } from "react-redux";
-import { clearCart } from "@/store/features/cart/cartSlice";
+import { clearCart, clearCartWithBackendSync } from "@/store/features/cart/cartSlice";
 
 function Success() {
   const navigate = useNavigate();
@@ -85,8 +85,11 @@ function Success() {
         console.log("13. Order creation response:", data);
 
         if (data.success) {
-          console.log("14. Order created successfully");
-          dispatch(clearCart({ userId: reduxUser?.user?._id || reduxUser?._id || null }));
+          if (reduxUser?.user?._id) {
+            dispatch(clearCartWithBackendSync({ userId: reduxUser.user._id }));
+          } else {
+            dispatch(clearCart({ userId: null }));
+          }
           toast.success("Payment successful! Order has been created.");
         } else {
           console.error("15. Order creation failed:", data.message);

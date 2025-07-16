@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import morgan from "morgan";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 
 import userRoutes from "./routes/userRoutes.js";
 import CategoriesRoutes from "./routes/CategoriesRoutes.js";
@@ -15,11 +17,24 @@ import carouselRoutes from "./routes/carouselRoutes.js";
 import imageSearchRoutes from "./routes/imageSearchRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import cartRoutes from "./routes/cartRoutes.js";
 
 dotenv.config();
 connectDB();
 
 const app = express();
+const server = http.createServer(app);
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: "http://localhost:5173",
+    credentials: true,
+    methods: ["GET", "POST"]
+  },
+  transports: ['polling', 'websocket']
+});
+
+// Export io for use in controllers
+export { io };
 
 // Middlewares
 app.use(morgan("dev"));
@@ -39,11 +54,28 @@ app.use("/api/v1/products", productsRoutes);
 app.use("/api/v1/payments", paymentRoutes);
 app.use("/api/v1/orders", orderRoutes);
 app.use("/api/v1/carousel", carouselRoutes);
-app.use("/api/v1", imageSearchRoutes);
+app.use("/api/v1/image-search", imageSearchRoutes);
 app.use("/api/v1/reviews", reviewRoutes);
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/cart", cartRoutes);
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(colors.bgMagenta(`Server is Running at port ${PORT}`));
+  
+  io.on('connection', (socket) => {
+    socket.on('join', (userId) => {
+      if (userId) {
+        socket.join(userId);
+      }
+    });
+    socket.on('disconnect', () => {
+    });
+    socket.on('error', (error) => {
+      console.error('Socket.IO error:', error);
+    });
+  });
+  io.engine.on('connection_error', (err) => {
+    console.error('Socket.IO connection error:', err);
+  });
 });

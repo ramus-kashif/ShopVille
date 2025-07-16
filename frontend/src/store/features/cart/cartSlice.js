@@ -1,4 +1,5 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { fetchCart, addToCartAPI, removeFromCartAPI, clearCartAPI } from "./cartService";
 
 const loadStateFromLocalStorage = (userId) => {
   try {
@@ -11,7 +12,7 @@ const loadStateFromLocalStorage = (userId) => {
     }
     return JSON.parse(cartData); //This line load cart items from localStorage if items are present there
   } catch (error) {
-    console.log("Error while loading cart items", error);
+    console.error("Error while loading cart items", error);
     return {
       items: [],
     };
@@ -23,13 +24,8 @@ const saveStateIntoLocalStorage = (state, userId) => {
     const cartKey = userId ? `cart_${userId}` : "cart_guest";
     const cartData = JSON.stringify(state);
     window.localStorage.setItem(cartKey, cartData);
-    console.log(`Saved cart to localStorage with key: ${cartKey}`, cartData);
-    
-    // Verify the data was saved correctly
-    const savedData = window.localStorage.getItem(cartKey);
-    console.log(`Verified saved data for key ${cartKey}:`, savedData);
   } catch (error) {
-    console.log("Error while saving cart items to local storage", error);
+    console.error("Error while saving cart items to local storage", error);
   }
 };
 
@@ -45,13 +41,12 @@ const migrateOldCartData = (userId) => {
         window.localStorage.setItem(cartKey, oldCartData);
         // Remove old cart data
         window.localStorage.removeItem("cart");
-        console.log("Migrated old cart data to user-specific storage");
         return oldCart;
       }
     }
     return null;
   } catch (error) {
-    console.log("Error migrating cart data:", error);
+    console.error("Error migrating cart data:", error);
     return null;
   }
 };
@@ -62,47 +57,161 @@ const getInitialCartState = () => {
     const userData = window.localStorage.getItem("user");
     if (userData) {
       const user = JSON.parse(userData);
-      console.log("User data from localStorage:", user);
       
       // The login response structure is { success: true, message: "Login successful", user, token }
       // So user data is directly in the user field
       const userId = user.user?._id;
       if (userId) {
-        console.log("Initializing cart for existing user:", userId);
         return loadStateFromLocalStorage(userId);
       }
     }
-    console.log("No user found, initializing empty cart");
     return { items: [] };
   } catch (error) {
-    console.log("Error getting initial cart state:", error);
+    console.error("Error getting initial cart state:", error);
     return { items: [] };
   }
 };
 
 const initialState = getInitialCartState();
 
-// use this in store file, authReducer
+// Thunks for backend cart actions
+export const fetchUserCart = createAsyncThunk("cart/fetchUserCart", async (_, { rejectWithValue }) => {
+  try {
+    return await fetchCart();
+  } catch (err) {
+    return rejectWithValue(err.response?.data || err.message);
+  }
+});
+
+export const addToCartBackend = createAsyncThunk("cart/addToCartBackend", async ({ productId, quantity }, { rejectWithValue }) => {
+  try {
+    return await addToCartAPI(productId, quantity);
+  } catch (err) {
+    return rejectWithValue(err.response?.data || err.message);
+  }
+});
+
+export const removeFromCartBackend = createAsyncThunk("cart/removeFromCartBackend", async (productId, { rejectWithValue }) => {
+  try {
+    return await removeFromCartAPI(productId);
+  } catch (err) {
+    return rejectWithValue(err.response?.data || err.message);
+  }
+});
+
+export const clearCartBackend = createAsyncThunk("cart/clearCartBackend", async (_, { rejectWithValue }) => {
+  try {
+    return await clearCartAPI();
+  } catch (err) {
+    return rejectWithValue(err.response?.data || err.message);
+  }
+});
+
+// New thunks that handle both local and backend sync
+export const addToCartWithBackendSync = createAsyncThunk(
+  "cart/addToCartWithBackendSync", 
+  async ({ item, userId }, { dispatch }) => {
+    // First update local state
+    dispatch(addToCart({ item, userId }));
+    
+    // Then sync with backend if user is logged in
+    if (userId) {
+      try {
+        const result = await addToCartAPI(item.productId, item.quantity);
+        return result;
+      } catch (error) {
+        console.error("Backend sync failed for addToCart:", error);
+        // Don't throw error - keep local state intact
+        return null;
+      }
+    }
+    return null;
+  }
+);
+
+export const removeFromCartWithBackendSync = createAsyncThunk(
+  "cart/removeFromCartWithBackendSync", 
+  async ({ itemId, userId }, { dispatch }) => {
+    // First update local state
+    dispatch(removeFromCart({ itemId, userId }));
+    
+    // Then sync with backend if user is logged in
+    if (userId) {
+      try {
+        const result = await removeFromCartAPI(itemId);
+        return result;
+      } catch (error) {
+        console.error("Backend sync failed for removeFromCart:", error);
+        // Don't throw error - keep local state intact
+        return null;
+      }
+    }
+    return null;
+  }
+);
+
+export const updateQuantityWithBackendSync = createAsyncThunk(
+  "cart/updateQuantityWithBackendSync", 
+  async ({ productId, quantity, userId }, { dispatch }) => {
+    // First update local state
+    dispatch(updateQuantity({ productId, quantity, userId }));
+    
+    // Then sync with backend if user is logged in
+    if (userId) {
+      try {
+        // Remove current item and add with new quantity
+        await removeFromCartAPI(productId);
+        if (quantity > 0) {
+          const result = await addToCartAPI(productId, quantity);
+          return result;
+        }
+      } catch (error) {
+        console.error("Backend sync failed for updateQuantity:", error);
+        // Don't throw error - keep local state intact
+        return null;
+      }
+    }
+    return null;
+  }
+);
+
+export const clearCartWithBackendSync = createAsyncThunk(
+  "cart/clearCartWithBackendSync", 
+  async ({ userId }, { dispatch }) => {
+    // First update local state
+    dispatch(clearCart({ userId }));
+    
+    // Then sync with backend if user is logged in
+    if (userId) {
+      try {
+        const result = await clearCartAPI();
+        return result;
+      } catch (error) {
+        console.error("Backend sync failed for clearCart:", error);
+        // Don't throw error - keep local state intact
+        return null;
+      }
+    }
+    return null;
+  }
+);
+
 export const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
     addToCart: (state, action) => {
       const { item, userId } = action.payload;
-      console.log("Adding item to cart:", item, "for user:", userId);
       
       const existingItem = state.items.find((i) => {
         return i.productId === item.productId;
       });
       if (existingItem) {
         existingItem.quantity += item.quantity;
-        console.log("Updated existing item quantity:", existingItem.quantity);
       } else {
         state.items.push(item);
-        console.log("Added new item to cart");
       }
       
-      console.log("Current cart state:", state.items);
       saveStateIntoLocalStorage(state, userId);
     },
     removeFromCart: (state, action) => {
@@ -127,10 +236,8 @@ export const cartSlice = createSlice({
     },
     loadUserCart: (state, action) => {
       const { userId } = action.payload;
-      console.log("Loading cart for user:", userId);
       
       if (!userId) {
-        console.log("No userId provided, clearing cart");
         state.items = [];
         return;
       }
@@ -138,29 +245,22 @@ export const cartSlice = createSlice({
       // Try to migrate old cart data first
       const migratedCart = migrateOldCartData(userId);
       if (migratedCart) {
-        console.log("Migrated cart data:", migratedCart);
         state.items = migratedCart.items;
       } else {
         const userCart = loadStateFromLocalStorage(userId);
-        console.log("Loaded cart from localStorage:", userCart);
         state.items = userCart.items;
       }
-      
-      console.log("Final cart state:", state.items);
     },
     initializeCart: (state, action) => {
       const { userId } = action.payload;
-      console.log("Initializing cart for user:", userId);
       
       if (!userId) {
-        console.log("No userId provided for initialization, keeping current state");
         return;
       }
       
       // Only load if cart is empty
       if (state.items.length === 0) {
         const userCart = loadStateFromLocalStorage(userId);
-        console.log("Initialized cart from localStorage:", userCart);
         state.items = userCart.items;
       }
     },
@@ -215,6 +315,63 @@ export const cartSlice = createSlice({
       const cartKey = userId ? `cart_${userId}` : "cart_guest";
       window.localStorage.removeItem(cartKey);
     },
+    updateCartPrices: (state, action) => {
+      const { products } = action.payload;
+      if (!products || !Array.isArray(products)) return;
+      
+      // Create a map of product prices for quick lookup
+      const priceMap = {};
+      products.forEach(product => {
+        priceMap[product._id] = product.price;
+      });
+      
+      // Update cart item prices with current product prices
+      state.items.forEach(item => {
+        if (priceMap[item.productId]) {
+          item.price = priceMap[item.productId];
+        }
+      });
+      
+      // Save updated cart to localStorage
+      const userData = window.localStorage.getItem("user");
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          const userId = user.user?._id;
+          if (userId) {
+            saveStateIntoLocalStorage(state, userId);
+          }
+        } catch (error) {
+          console.error("Error updating cart prices:", error);
+        }
+      }
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchUserCart.fulfilled, (state, action) => {
+        const backendItems = action.payload?.items || [];
+        const localItems = state.items || [];
+        
+        // If backend has items, use backend data
+        // If backend is empty but local has items, keep local items
+        if (backendItems.length > 0) {
+          state.items = backendItems;
+        } else if (localItems.length > 0) {
+          // Keep local items but don't override
+        } else {
+          state.items = [];
+        }
+      })
+      .addCase(addToCartBackend.fulfilled, (state, action) => {
+        state.items = action.payload?.items || [];
+      })
+      .addCase(removeFromCartBackend.fulfilled, (state, action) => {
+        state.items = action.payload?.items || [];
+      })
+      .addCase(clearCartBackend.fulfilled, (state) => {
+        state.items = [];
+      });
   },
 });
 
@@ -227,7 +384,8 @@ export const {
   loadUserCart, 
   clearUserCart,
   initializeCart,
-  debugCart
+  debugCart,
+  updateCartPrices
 } = cartSlice.actions;
 
 // Selectors

@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import { getSingleProduct } from "@/store/features/products/productSlice";
 import formatNumber from "format-number";
-import { addToCart } from "@/store/features/cart/cartSlice";
+import { addToCart, addToCartWithBackendSync } from "@/store/features/cart/cartSlice";
 import { toast } from "react-toastify";
 import { ShoppingCart, Star, Truck, Shield, ArrowLeft, Package, Heart, CheckCircle, Clock, Award } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -33,8 +33,8 @@ function ProductDetails() {
   };
 
   const handleAddToCart = () => {
-    dispatch(
-      addToCart({
+    if (user?.user?._id) {
+      dispatch(addToCartWithBackendSync({
         item: {
           productId,
           title,
@@ -42,9 +42,22 @@ function ProductDetails() {
           pictureUrl,
           quantity,
         },
-        userId: user?.user?._id || null,
-      })
-    );
+        userId: user.user._id,
+      }));
+    } else {
+      dispatch(
+        addToCart({
+          item: {
+            productId,
+            title,
+            price,
+            pictureUrl,
+            quantity,
+          },
+          userId: null,
+        })
+      );
+    }
     toast.success("Product added to cart successfully!", {
       position: "bottom-right",
       autoClose: 2000,
@@ -52,7 +65,6 @@ function ProductDetails() {
       closeOnClick: true,
       pauseOnHover: true,
       draggable: true,
-      progress: undefined,
     });
   };
 
@@ -66,7 +78,7 @@ function ProductDetails() {
     }
   }, [products]);
   
-  const { title, price, picture, description, category, discount } = productDetails;
+  const { title, price, picture, description, category, discount, stock } = productDetails;
   const pictureUrl = picture?.secure_url || "";
   const categoryName = category?.name || "";
 
@@ -251,6 +263,14 @@ Don't miss out on this opportunity to own a product that truly makes a differenc
                     )}
                   </div>
 
+                  {/* Stock Display */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-[#6C757D]">Stock:</span>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium border ${stock > 0 ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200'}`}>
+                      {stock > 0 ? `${stock} available` : 'Out of Stock'}
+                    </span>
+                  </div>
+
                   {/* Quantity Selector */}
                   <div className="space-y-3">
                     <label className="text-lg font-semibold text-[#1C1C1E]">Quantity</label>
@@ -282,9 +302,10 @@ Don't miss out on this opportunity to own a product that truly makes a differenc
                   <button
                     onClick={handleAddToCart}
                     className="w-full bg-[#FF6B00] hover:bg-[#FF8C42] text-white py-4 px-8 rounded-xl text-xl font-semibold shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-3"
+                    disabled={stock === 0}
                   >
                     <ShoppingCart className="w-6 h-6" />
-                    Add to Cart
+                    {stock === 0 ? 'Out of Stock' : 'Add to Cart'}
                   </button>
 
                   {/* Features */}

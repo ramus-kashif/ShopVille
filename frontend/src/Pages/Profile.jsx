@@ -7,19 +7,19 @@ import { useNavigate } from "react-router-dom";
 function Profile() {
   const user = useSelector((state) => state.auth.user);
   const [form, setForm] = useState({
-    name: user?.user?.name || "",
-    email: user?.user?.email || "",
-    picture: user?.user?.picture || "",
+    name: user?.name || "",
+    email: user?.email || "",
+    picture: user?.picture || "",
     password: "",
   });
 
   // Update form when user data changes
   useEffect(() => {
-    if (user?.user) {
+    if (user) {
       setForm({
-        name: user.user.name || "",
-        email: user.user.email || "",
-        picture: user.user.picture || "",
+        name: user.name || "",
+        email: user.email || "",
+        picture: user.picture || "",
         password: "",
       });
     }
@@ -66,12 +66,17 @@ function Profile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    if (!user || !user._id) {
+      toast.error("User not found. Please log in again.");
+      setLoading(false);
+      return;
+    }
     try {
       // Only send fields that have changed
       const updateData = {};
-      if (form.name !== user.user.name) updateData.name = form.name;
-      if (form.email !== user.user.email) updateData.email = form.email;
-      if (form.picture !== user.user.picture) updateData.picture = form.picture;
+      if (form.name !== user.name) updateData.name = form.name;
+      if (form.email !== user.email) updateData.email = form.email;
+      if (form.picture !== user.picture) updateData.picture = form.picture;
       if (form.password) updateData.password = form.password;
 
       // If nothing changed, show message and return
@@ -81,7 +86,7 @@ function Profile() {
         return;
       }
 
-              const res = await fetch(`http://localhost:8080/api/v1/users/${user.user._id}`, {
+      const res = await fetch(`http://localhost:8080/api/v1/users/${user._id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updateData),
@@ -91,10 +96,9 @@ function Profile() {
       if (data.success) {
         toast.success("Profile updated successfully");
         // Update Redux and localStorage with new user info
-        const updatedUser = { ...user.user, ...updateData, password: undefined };
-        const updatedResponse = { ...user, user: updatedUser };
-        window.localStorage.setItem("user", JSON.stringify(updatedResponse));
-        dispatch(login.fulfilled(updatedResponse));
+        const updatedUser = { ...user, ...updateData, password: undefined };
+        window.localStorage.setItem("user", JSON.stringify(updatedUser));
+        dispatch(login.fulfilled(updatedUser));
         // Navigate to shop page after successful update
         setTimeout(() => {
           navigate("/shop");

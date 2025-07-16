@@ -88,6 +88,7 @@ function Products() {
             <TableHead>Price</TableHead>
             <TableHead>Discount (%)</TableHead>
             <TableHead>Final Price</TableHead>
+            <TableHead>Stock</TableHead>
             <TableHead>Category</TableHead>
             <TableHead>Added By</TableHead>
             <TableHead>Date</TableHead>
@@ -114,6 +115,7 @@ function Products() {
                 <TableCell>{formatNumber({prefix: 'Rs. '})(product.price) || 0}</TableCell>
                 <TableCell>{product.discount || 0}</TableCell>
                 <TableCell>{formatNumber({prefix: 'Rs. '})(product.price - (product.price * (product.discount || 0) / 100))}</TableCell>
+                <TableCell>{product.stock ?? 0}</TableCell>
                 <TableCell>{product.category?.name || 0}</TableCell>
                 <TableCell>{product.user?.name || 0}</TableCell>
                 <TableCell>

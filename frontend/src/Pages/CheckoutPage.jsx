@@ -4,7 +4,7 @@ import formatNumber from "format-number";
 import { useEffect } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { toast } from "react-toastify";
-import { clearCart } from "@/store/features/cart/cartSlice";
+import { clearCart, clearCartWithBackendSync } from "@/store/features/cart/cartSlice";
 import { CreditCard, Truck, Shield, ArrowLeft, CheckCircle, Award } from "lucide-react";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
@@ -43,7 +43,11 @@ export default function CheckoutPage() {
       });
       const data = await res.json();
       if (data.success) {
-        dispatch(clearCart({ userId: user?.user?._id || user?._id || null }));
+        if (user?.user?._id) {
+          dispatch(clearCartWithBackendSync({ userId: user.user._id }));
+        } else {
+          dispatch(clearCart({ userId: null }));
+        }
         toast.success("Order placed with Cash on Delivery", { autoClose: 1500 });
         navigate("/orders");
       } else {

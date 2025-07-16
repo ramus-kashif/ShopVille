@@ -1,7 +1,8 @@
 import { Routes, Route, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { loadUserCart, initializeCart } from "./store/features/cart/cartSlice";
+import { loadUserCart, initializeCart, fetchUserCart, updateCartPrices } from "./store/features/cart/cartSlice";
+import { getAllProducts } from "./store/features/products/productSlice";
 import RegisterPage from "./Pages/RegisterPage";
 import LoginPage from "./Pages/LoginPage";
 import AdminLogin from "./Pages/Admin/AdminLogin";
@@ -32,11 +33,14 @@ import OrderPage from "./Pages/OrderPage";
 import GoogleAuthCallback from "./Pages/GoogleAuthCallback";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import socket from './store/socket.js';
+import { toast } from "react-toastify";
 
 function App() {
   const location = useLocation();
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
+  const products = useSelector((state) => state.products.products);
   const isAdmin = location.pathname.startsWith("/admin");
   // Hide Navbar on login and register pages
   const hideNavbar = ["/login", "/register", "/admin/login"].includes(location.pathname);
@@ -45,8 +49,63 @@ function App() {
   useEffect(() => {
     if (user?.user?._id) {
       dispatch(initializeCart({ userId: user.user._id }));
+      // Only connect if not already connected
+      if (!socket.connected) {
+        socket.connect();
+      }
+      const handleConnect = () => {
+        // Only emit join if not already in the room
+        socket.emit('join', user.user._id);
+      };
+      const handleConnectError = (error) => {
+        // Only log critical errors
+        // Optionally, you can toast or report this
+      };
+      const priceAlertHandler = (data) => {
+        toast.info(`Price alert: ${data.title} dropped from PKR ${data.oldPrice} to PKR ${data.newPrice}`, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        // Fetch latest products, then update cart prices
+        dispatch(getAllProducts()).then((action) => {
+          if (action.payload && action.payload.products) {
+            dispatch(updateCartPrices({ products: action.payload.products }));
+          }
+        });
+      };
+      socket.off('connect', handleConnect);
+      socket.off('connect_error', handleConnectError);
+      socket.off('priceAlert');
+      socket.on('connect', handleConnect);
+      socket.on('connect_error', handleConnectError);
+      socket.on('priceAlert', priceAlertHandler);
+      return () => {
+        socket.off('connect', handleConnect);
+        socket.off('connect_error', handleConnectError);
+        socket.off('priceAlert', priceAlertHandler);
+        // Disconnect socket on logout
+        if (!user?.user?._id && socket.connected) {
+          socket.disconnect();
+        }
+      };
+    } else {
+      // Only disconnect if connected
+      if (socket.connected) {
+        socket.disconnect();
+      }
     }
-  }, []); // Only run once on mount
+  }, [user, dispatch, products]);
+
+  // Update cart prices when products change
+  useEffect(() => {
+    if (products && products.products && Array.isArray(products.products)) {
+      dispatch(updateCartPrices({ products: products.products }));
+    }
+  }, [products, dispatch]);
 
   // Load user's cart when user changes
   useEffect(() => {

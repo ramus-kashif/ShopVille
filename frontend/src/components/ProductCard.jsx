@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { addToCart } from "@/store/features/cart/cartSlice";
+import { addToCart, addToCartWithBackendSync } from "@/store/features/cart/cartSlice";
 import { toast } from "react-toastify";
 import { ShoppingCart, Star, Heart, Eye } from "lucide-react";
 import formatNumber from "format-number";
@@ -8,14 +8,14 @@ import formatNumber from "format-number";
 function ProductCard({ product }) {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
-  const { _id, title, price, picture, category, discount, averageRating, numOfReviews } = product;
+  const { _id, title, price, picture, category, discount, averageRating, numOfReviews, stock } = product;
   const pictureUrl = picture?.secure_url || "";
 
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    dispatch(
-      addToCart({
+    if (user?.user?._id) {
+      dispatch(addToCartWithBackendSync({ 
         item: {
           productId: _id,
           title,
@@ -23,9 +23,22 @@ function ProductCard({ product }) {
           pictureUrl,
           quantity: 1,
         },
-        userId: user?.user?._id || null,
-      })
-    );
+        userId: user.user._id 
+      }));
+    } else {
+      dispatch(
+        addToCart({
+          item: {
+            productId: _id,
+            title,
+            price,
+            pictureUrl,
+            quantity: 1,
+          },
+          userId: null,
+        })
+      );
+    }
     toast.success("Product added to cart successfully!", { autoClose: 2000 });
   };
 
@@ -65,10 +78,11 @@ function ProductCard({ product }) {
           <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
             <button
               onClick={handleAddToCart}
-              className="w-full bg-[#FF6B00] hover:bg-[#FF8C42] text-white py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-lg flex items-center justify-center gap-2"
+              className="w-full bg-[#FF6B00] hover:bg-[#FF8C42] text-white py-3 px-4 rounded-xl font-semibold transition-all duration-200 shadow-lg flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              disabled={stock === 0}
             >
               <ShoppingCart className="w-5 h-5" />
-              Add to Cart
+              {stock === 0 ? 'Out of Stock' : 'Add to Cart'}
             </button>
           </div>
         </div>

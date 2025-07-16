@@ -1,6 +1,8 @@
 import {
   removeFromCart,
   updateQuantity,
+  removeFromCartWithBackendSync,
+  updateQuantityWithBackendSync,
 } from "@/store/features/cart/cartSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -15,17 +17,29 @@ function CartPage() {
 
   const handleChangeQuantity = (productId, quantity) => {
     if (quantity < 1) return;
-    dispatch(
-      updateQuantity({
+    if (user?.user?._id) {
+      dispatch(updateQuantityWithBackendSync({
         productId,
         quantity,
-        userId: user?._id || null,
-      })
-    );
+        userId: user.user._id,
+      }));
+    } else {
+      dispatch(
+        updateQuantity({
+          productId,
+          quantity,
+          userId: null,
+        })
+      );
+    }
   };
 
   const handleRemoveCart = (productId) => {
-    dispatch(removeFromCart({ itemId: productId, userId: user?._id || null }));
+    if (user?.user?._id) {
+      dispatch(removeFromCartWithBackendSync({ itemId: productId, userId: user.user._id }));
+    } else {
+      dispatch(removeFromCart({ itemId: productId, userId: null }));
+    }
     toast.info("Item removed from cart successfully", { autoClose: 1500 });
   };
 
