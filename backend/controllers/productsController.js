@@ -199,6 +199,7 @@ const updateSingleProductController = async (req, res) => {
         for (const cart of carts) {
           const user = cart.userId;
           if (user && user.email) {
+            console.log(`[Socket.IO] Emitting priceAlert to user room: ${user._id} for product ${productId} (old: ${oldPrice}, new: ${price})`);
             io.to(user._id.toString()).emit('priceAlert', {
               productId,
               newPrice: Number(price),
@@ -233,6 +234,7 @@ const updateSingleProductController = async (req, res) => {
         for (const cart of carts) {
           const user = cart.userId;
           if (user && user.email) {
+            console.log(`[Socket.IO] Emitting priceAlert to user room: ${user._id} for product ${productId} (old: ${oldPrice}, new: ${price})`);
             io.to(user._id.toString()).emit('priceAlert', {
               productId,
               newPrice: Number(price),

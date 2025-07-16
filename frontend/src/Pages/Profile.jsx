@@ -1,7 +1,7 @@
 import { useSelector, useDispatch } from "react-redux";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import { login } from "@/store/features/auth/authSlice";
+import { login, updateUserProfile } from "@/store/features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 
 function Profile() {
@@ -52,6 +52,10 @@ function Profile() {
       const data = await res.json();
       if (data.success) {
         setForm((prev) => ({ ...prev, picture: data.picture }));
+        // Update Redux and localStorage with new picture
+        const updatedUser = { ...user, picture: data.picture };
+        window.localStorage.setItem("user", JSON.stringify(updatedUser));
+        dispatch(updateUserProfile(updatedUser));
         toast.success("Profile picture uploaded successfully");
       } else {
         toast.error(data.message || "Failed to upload picture");
@@ -83,6 +87,7 @@ function Profile() {
       if (Object.keys(updateData).length === 0) {
         toast.info("No changes detected");
         setLoading(false);
+        navigate("/shop");
         return;
       }
 
@@ -95,10 +100,12 @@ function Profile() {
       const data = await res.json();
       if (data.success) {
         toast.success("Profile updated successfully");
-        // Update Redux and localStorage with new user info
-        const updatedUser = { ...user, ...updateData, password: undefined };
+        // Merge backend user with existing user and always preserve picture
+        const updatedUser = data.user
+          ? { ...user, ...data.user, picture: data.user.picture || user.picture }
+          : { ...user, ...updateData, password: undefined };
         window.localStorage.setItem("user", JSON.stringify(updatedUser));
-        dispatch(login.fulfilled(updatedUser));
+        dispatch(updateUserProfile(updatedUser));
         // Navigate to shop page after successful update
         setTimeout(() => {
           navigate("/shop");

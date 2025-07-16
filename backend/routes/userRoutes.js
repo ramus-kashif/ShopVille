@@ -30,13 +30,21 @@ userRouter.post("/upload-profile-picture", isAuthorized, upload.single("picture"
     if (!req.file) {
       return res.status(400).json({ success: false, message: "No file uploaded" });
     }
-    
     const result = await uploadImageOnCloudinary(req.file.path, "profile-pictures");
-    
+    // Update the user's picture field in the database
+    const userId = req.user._id || req.user.id;
+    await import("../models/userModel.js").then(async ({ default: userModel }) => {
+      await userModel.findByIdAndUpdate(userId, { picture: result.secure_url });
+    });
+    // Fetch the updated user (without password)
+    const updatedUser = await import("../models/userModel.js").then(async ({ default: userModel }) => {
+      return userModel.findById(userId).select("-password");
+    });
     res.status(200).json({
       success: true,
-      message: "Profile picture uploaded successfully",
-      picture: result.secure_url
+      message: "Profile picture uploaded and updated successfully",
+      picture: result.secure_url,
+      user: updatedUser,
     });
   } catch (error) {
     console.log("Profile picture upload error:", error);

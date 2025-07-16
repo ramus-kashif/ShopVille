@@ -64,12 +64,17 @@ server.listen(PORT, () => {
   console.log(colors.bgMagenta(`Server is Running at port ${PORT}`));
   
   io.on('connection', (socket) => {
+    console.log('[Socket.IO] New client connected:', socket.id);
     socket.on('join', (userId) => {
       if (userId) {
         socket.join(userId);
+        console.log(`[Socket.IO] User joined room: ${userId} (socket: ${socket.id})`);
+      } else {
+        console.log('[Socket.IO] join event received with no userId');
       }
     });
     socket.on('disconnect', () => {
+      console.log('[Socket.IO] Client disconnected:', socket.id);
     });
     socket.on('error', (error) => {
       console.error('Socket.IO error:', error);

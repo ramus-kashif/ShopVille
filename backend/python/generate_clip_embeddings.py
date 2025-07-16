@@ -56,7 +56,7 @@ for product in tqdm(products, desc="Generating embeddings"):
 
     if image_embedding and text_embedding:
         embeddings[product_id] = {"image": image_embedding, "text": text_embedding}
-        successful += 1
+            successful += 1
     else:
         failed += 1
 

@@ -20,7 +20,9 @@ export const login = createAsyncThunk(
     try {
       const response = await authService.login(inputValues);
       console.log("Login response:", response);
-      window.localStorage.setItem("user", JSON.stringify(response));
+      // Always store only the flat user object
+      const flatUser = response.user ? { ...response.user } : { ...response };
+      window.localStorage.setItem("user", JSON.stringify(flatUser));
       
       // Load user's cart after successful login
       if (response.user?._id) {
@@ -49,16 +51,25 @@ export const logout = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
     console.log("Logout: Clearing user data but preserving cart");
     window.localStorage.removeItem("user"); // Remove user from localStorage on logout
     window.localStorage.removeItem("token"); // Remove token from localStorage on logout
-    
+
+    // Redirect based on role (admin or user)
+    const lastUser = JSON.parse(window.localStorage.getItem("user"));
+    if (lastUser && lastUser.role === 1) {
+      window.location.href = "/adminLogin";
+    } else {
+      window.location.href = "/login";
+    }
+
     // Don't clear user's cart from localStorage - it will be restored on next login
     // Just clear the Redux state by setting user to null
-    
+
     return response;
   } catch (error) {
     // Even if the API call fails, clear local storage
     console.log("Logout error, still clearing user data");
     window.localStorage.removeItem("user");
     window.localStorage.removeItem("token");
+    window.location.href = "/login";
     return thunkAPI.rejectWithValue(error);
   }
 });
@@ -70,6 +81,12 @@ const initialState = {
   status: "idle",
   error: null,
 };
+// Utility to always extract the flat user object from API responses
+function extractFlatUser(payload) {
+  if (!payload) return null;
+  // If payload has a 'user' key, use that, else use payload directly
+  return payload.user ? { ...payload.user } : { ...payload };
+}
 // use this in store file, authReducer
 export const authSlice = createSlice({
   name: "auth",
@@ -79,7 +96,13 @@ export const authSlice = createSlice({
       state.value += action.payload;
     },
     setUserFromPhoneRegistration: (state, action) => {
-      state.user = action.payload;
+      state.user = extractFlatUser(action.payload);
+      state.status = "success";
+      state.error = null;
+    },
+    // Add a reducer to update user after profile update
+    updateUserProfile: (state, action) => {
+      state.user = extractFlatUser(action.payload);
       state.status = "success";
       state.error = null;
     },
@@ -92,7 +115,7 @@ export const authSlice = createSlice({
       })
       .addCase(register.fulfilled, (state, action) => {
         state.status = "success";
-        state.user = action.payload;
+        state.user = extractFlatUser(action.payload);
       })
       .addCase(register.rejected, (state, action) => {
         state.status = "failed";
@@ -104,7 +127,7 @@ export const authSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action) => {
         state.status = "success";
-        state.user = action.payload;
+        state.user = extractFlatUser(action.payload);
       })
       .addCase(login.rejected, (state, action) => {
         state.status = "failed";
@@ -126,6 +149,6 @@ export const authSlice = createSlice({
 });
 
 // Action creators are generated for each case reducer function
-export const { incrementByAmount, setUserFromPhoneRegistration } = authSlice.actions;
+export const { incrementByAmount, setUserFromPhoneRegistration, updateUserProfile } = authSlice.actions;
 
 export default authSlice.reducer;

@@ -17,11 +17,11 @@ function CartPage() {
 
   const handleChangeQuantity = (productId, quantity) => {
     if (quantity < 1) return;
-    if (user?.user?._id) {
+    if (user?._id) {
       dispatch(updateQuantityWithBackendSync({
         productId,
         quantity,
-        userId: user.user._id,
+        userId: user._id,
       }));
     } else {
       dispatch(
@@ -35,16 +35,19 @@ function CartPage() {
   };
 
   const handleRemoveCart = (productId) => {
-    if (user?.user?._id) {
-      dispatch(removeFromCartWithBackendSync({ itemId: productId, userId: user.user._id }));
+    if (user?._id) {
+      dispatch(removeFromCartWithBackendSync({ itemId: productId, userId: user._id }));
     } else {
       dispatch(removeFromCart({ itemId: productId, userId: null }));
     }
     toast.info("Item removed from cart successfully", { autoClose: 1500 });
   };
 
+  // Robust subtotal calculation
   const totalAmount = cartItems.reduce((total, item) => {
-    return total + item.price * item.quantity;
+    const price = Number(item.price) || 0;
+    const quantity = Number(item.quantity) || 0;
+    return total + price * quantity;
   }, 0);
 
   if (cartItems.length === 0) {
@@ -110,7 +113,7 @@ function CartPage() {
           <div className="lg:col-span-2 space-y-4">
             {cartItems.map((item, index) => (
               <div
-                key={item.productId}
+                key={item.productId + '-' + (item.title || index)}
                 className="bg-white rounded-2xl shadow-sm p-6 transform transition-all duration-300 hover:shadow-lg border border-[#E0E0E0] hover:border-[#FF6B00]/30"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
@@ -118,9 +121,10 @@ function CartPage() {
                   {/* Product Image */}
                   <div className="relative">
                     <img
-                      src={item.pictureUrl}
+                      src={item.pictureUrl || item.picture || "/placeholder.png"}
                       alt={item.title}
                       className="w-24 h-24 object-cover rounded-xl shadow-sm"
+                      onError={e => { e.target.onerror = null; e.target.src = "/placeholder.png"; }}
                     />
                     <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#FF6B00] text-white text-xs rounded-full flex items-center justify-center font-bold">
                       {item.quantity}

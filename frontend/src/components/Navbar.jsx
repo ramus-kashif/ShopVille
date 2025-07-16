@@ -243,10 +243,10 @@ export default function Navbar() {
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="w-12 h-12 bg-gradient-to-br from-[#FF6B00] to-[#FF8C42] rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 focus:outline-none"
                 >
-                  {user.user?.picture ? (
+                  {user.picture ? (
                     <img 
-                      src={user.user.picture} 
-                      alt={user.user.name} 
+                      src={user.picture} 
+                      alt={user.name} 
                       className="w-8 h-8 rounded-full object-cover"
                     />
                   ) : (
@@ -259,22 +259,22 @@ export default function Navbar() {
                   <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-[#E0E0E0] py-2 animate-fade-in">
                     <div className="px-4 py-3 border-b border-[#E0E0E0]">
                       <div className="flex items-center space-x-3">
-                        {user.user?.picture ? (
+                        {user.picture ? (
                           <img 
-                            src={user.user.picture} 
-                            alt={user.user.name} 
+                            src={user.picture} 
+                            alt={user.name} 
                             className="w-10 h-10 rounded-full object-cover"
                           />
                         ) : (
                           <div className="w-10 h-10 bg-gradient-to-br from-[#FF6B00] to-[#FF8C42] rounded-full flex items-center justify-center">
                             <span className="text-white font-bold text-lg">
-                              {user.user?.name?.charAt(0)?.toUpperCase() || "U"}
+                              {user.name?.charAt(0)?.toUpperCase() || "U"}
                             </span>
                           </div>
                         )}
                         <div>
-                          <p className="font-semibold text-[#1C1C1E]">{user.user?.name}</p>
-                          <p className="text-sm text-[#6C757D]">{user.user?.email || user.user?.phone}</p>
+                          <p className="font-semibold text-[#1C1C1E]">{user.name}</p>
+                          <p className="text-sm text-[#6C757D]">{user.email || user.phone}</p>
                         </div>
                       </div>
                     </div>

@@ -57,10 +57,8 @@ const getInitialCartState = () => {
     const userData = window.localStorage.getItem("user");
     if (userData) {
       const user = JSON.parse(userData);
-      
-      // The login response structure is { success: true, message: "Login successful", user, token }
-      // So user data is directly in the user field
-      const userId = user.user?._id;
+      // Use flat user object
+      const userId = user._id;
       if (userId) {
         return loadStateFromLocalStorage(userId);
       }
@@ -337,7 +335,8 @@ export const cartSlice = createSlice({
       if (userData) {
         try {
           const user = JSON.parse(userData);
-          const userId = user.user?._id;
+          // Use flat user object
+          const userId = user._id;
           if (userId) {
             saveStateIntoLocalStorage(state, userId);
           }
@@ -350,15 +349,34 @@ export const cartSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchUserCart.fulfilled, (state, action) => {
-        const backendItems = action.payload?.items || [];
-        const localItems = state.items || [];
-        
-        // If backend has items, use backend data
-        // If backend is empty but local has items, keep local items
-        if (backendItems.length > 0) {
-          state.items = backendItems;
-        } else if (localItems.length > 0) {
-          // Keep local items but don't override
+        const backendCart = action.payload;
+        // If backendCart is an object with items, map them to include product info
+        if (backendCart && backendCart.items && Array.isArray(backendCart.items)) {
+          state.items = backendCart.items.map(item => {
+            // If productId is populated, extract info
+            const product = item.productId;
+            return {
+              productId: product._id || item.productId,
+              title: product.title || '',
+              price: product.price || 0,
+              pictureUrl: (product.picture && product.picture.secure_url) || '',
+              quantity: item.quantity,
+            };
+          });
+          // Persist mapped cart to localStorage for current user
+          const userData = window.localStorage.getItem("user");
+          if (userData) {
+            try {
+              // Always use flat user object
+              const user = userData.user ? userData.user : JSON.parse(userData);
+              const userId = user._id;
+              if (userId) {
+                saveStateIntoLocalStorage(state, userId);
+              }
+            } catch (error) {
+              console.error("Error saving backend cart to localStorage:", error);
+            }
+          }
         } else {
           state.items = [];
         }

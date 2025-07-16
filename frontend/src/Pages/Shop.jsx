@@ -430,15 +430,15 @@ function Shop() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   {products.products.map((product) => (
                     <Link key={product._id} to={`/product/${product._id}`} className="block bg-white rounded-lg p-2 border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
-                      <img
-                        src={product.picture?.secure_url || "/placeholder.png"}
-                        alt={product.title}
+                        <img
+                          src={product.picture?.secure_url || "/placeholder.png"}
+                          alt={product.title}
                         className="w-full h-24 object-cover rounded mb-2"
-                      />
+                        />
                       <h4 className="font-semibold text-gray-800 text-sm mb-1 truncate">{product.title}</h4>
                       <p className="text-xs text-gray-600 mb-1 truncate">{product.category?.name}</p>
                       <p className="text-[#FF6B00] font-bold text-sm">PKR {product.price}</p>
-                    </Link>
+                      </Link>
                   ))}
                 </div>
               ) : (
@@ -450,74 +450,74 @@ function Shop() {
           {/* Hide the rest of the product grid/info when image search is active */}
           {!imageSearchMessage && (
             <>
-              {/* Results Info */}
-              <div className="flex items-center justify-between mb-8">
-                <div className="text-[#6C757D]">
-                  Showing {products?.products?.length || 0} of {total} products
-                  {selectedCategory && (
-                    <span className="ml-3 text-[#FF6B00] font-semibold">
-                      • Filtered by category
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Products Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {products &&
-                  Array.isArray(products.products) &&
-                  products.products.map((product) => (
-                    <ProductCard key={product._id} product={product} />
-                  ))}
-              </div>
-
-              {/* No Products Message */}
-              {(!products?.products || products.products.length === 0) && (
-                <div className="text-center py-16">
-                  <div className="w-32 h-32 bg-[#F8F9FA] rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Package className="w-16 h-16 text-[#6C757D]" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-[#1C1C1E] mb-3">
-                    No Products Found
-                  </h3>
-                  <p className="text-[#6C757D] mb-6">
-                    Try adjusting your search or category filter
-                  </p>
-                  <button
-                    onClick={() => {
-                      setSearch("");
-                      dispatch(setSelectedCategory(""));
-                      dispatch(searchProducts({ search: "", page: 1, limit: pageSize }));
-                    }}
-                    className="bg-[#FF6B00] hover:bg-[#FF8C42] text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300"
-                  >
-                    Clear Filters
-                  </button>
-                </div>
+          {/* Results Info */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="text-[#6C757D]">
+              Showing {products?.products?.length || 0} of {total} products
+              {selectedCategory && (
+                <span className="ml-3 text-[#FF6B00] font-semibold">
+                  • Filtered by category
+                </span>
               )}
+            </div>
+          </div>
 
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="flex justify-center mt-16 gap-3">
-                  <button
-                    onClick={() => handlePageChange(Math.max(1, page - 1))}
-                    disabled={page === 1}
-                    className="px-6 py-3 rounded-xl bg-[#F8F9FA] hover:bg-[#EDEDED] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-[#1C1C1E] border border-[#E0E0E0] hover:border-[#FF6B00]"
-                  >
-                    Previous
-                  </button>
+          {/* Products Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {products &&
+              Array.isArray(products.products) &&
+              products.products.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+          </div>
+
+          {/* No Products Message */}
+          {(!products?.products || products.products.length === 0) && (
+            <div className="text-center py-16">
+              <div className="w-32 h-32 bg-[#F8F9FA] rounded-full flex items-center justify-center mx-auto mb-6">
+                <Package className="w-16 h-16 text-[#6C757D]" />
+              </div>
+              <h3 className="text-2xl font-bold text-[#1C1C1E] mb-3">
+                No Products Found
+              </h3>
+              <p className="text-[#6C757D] mb-6">
+                Try adjusting your search or category filter
+              </p>
+              <button
+                onClick={() => {
+                  setSearch("");
+                  dispatch(setSelectedCategory(""));
+                  dispatch(searchProducts({ search: "", page: 1, limit: pageSize }));
+                }}
+                className="bg-[#FF6B00] hover:bg-[#FF8C42] text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300"
+              >
+                Clear Filters
+              </button>
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-16 gap-3">
+              <button
+                onClick={() => handlePageChange(Math.max(1, page - 1))}
+                disabled={page === 1}
+                className="px-6 py-3 rounded-xl bg-[#F8F9FA] hover:bg-[#EDEDED] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-[#1C1C1E] border border-[#E0E0E0] hover:border-[#FF6B00]"
+              >
+                Previous
+              </button>
                   <span className="px-4 py-3 text-[#6C757D] font-semibold">
                     Page {page} of {totalPages}
                   </span>
-                  <button
-                    onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
-                    disabled={page === totalPages}
-                    className="px-6 py-3 rounded-xl bg-[#F8F9FA] hover:bg-[#EDEDED] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-[#1C1C1E] border border-[#E0E0E0] hover:border-[#FF6B00]"
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
+              <button
+                onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
+                disabled={page === totalPages}
+                className="px-6 py-3 rounded-xl bg-[#F8F9FA] hover:bg-[#EDEDED] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-[#1C1C1E] border border-[#E0E0E0] hover:border-[#FF6B00]"
+              >
+                Next
+              </button>
+            </div>
+          )}
             </>
           )}
         </div>

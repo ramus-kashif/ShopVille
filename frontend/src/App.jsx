@@ -42,35 +42,40 @@ function App() {
   const user = useSelector((state) => state.auth.user);
   const products = useSelector((state) => state.products.products);
   const isAdmin = location.pathname.startsWith("/admin");
-  // Hide Navbar on login and register pages
-  const hideNavbar = ["/login", "/register", "/admin/login"].includes(location.pathname);
+  // Hide Navbar on login and register pages and all /admin* routes
+  const hideNavbar = ["/login", "/register"].includes(location.pathname) || isAdmin;
 
   // Initialize cart on app start
   useEffect(() => {
-    if (user?.user?._id) {
-      dispatch(initializeCart({ userId: user.user._id }));
+    if (user?._id) {
+      dispatch(initializeCart({ userId: user._id }));
       // Only connect if not already connected
       if (!socket.connected) {
         socket.connect();
       }
       const handleConnect = () => {
         // Only emit join if not already in the room
-        socket.emit('join', user.user._id);
+        console.log('[Socket.IO] Emitting join for user:', user._id);
+        socket.emit('join', user._id);
       };
       const handleConnectError = (error) => {
         // Only log critical errors
         // Optionally, you can toast or report this
+        console.error('[Socket.IO] Connection error:', error);
       };
       const priceAlertHandler = (data) => {
-        toast.info(`Price alert: ${data.title} dropped from PKR ${data.oldPrice} to PKR ${data.newPrice}`, {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-        // Fetch latest products, then update cart prices
+        console.log('[Socket.IO] Received priceAlert:', data);
+        if (data.newPrice < data.oldPrice) {
+          toast.info(`Price alert: ${data.title} dropped from PKR ${data.oldPrice} to PKR ${data.newPrice}`, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
+        // Always update cart prices on any priceAlert
         dispatch(getAllProducts()).then((action) => {
           if (action.payload && action.payload.products) {
             dispatch(updateCartPrices({ products: action.payload.products }));
@@ -88,17 +93,19 @@ function App() {
         socket.off('connect_error', handleConnectError);
         socket.off('priceAlert', priceAlertHandler);
         // Disconnect socket on logout
-        if (!user?.user?._id && socket.connected) {
+        if (!user?._id && socket.connected) {
+          console.log('[Socket.IO] Disconnecting socket (user logged out)');
           socket.disconnect();
         }
       };
     } else {
       // Only disconnect if connected
       if (socket.connected) {
+        console.log('[Socket.IO] Disconnecting socket (no user)');
         socket.disconnect();
       }
     }
-  }, [user, dispatch, products]);
+  }, [user, dispatch]);
 
   // Update cart prices when products change
   useEffect(() => {
@@ -109,16 +116,23 @@ function App() {
 
   // Load user's cart when user changes
   useEffect(() => {
-    if (user?.user?._id) {
-      dispatch(loadUserCart({ userId: user.user._id }));
+    if (user?._id) {
+      dispatch(loadUserCart({ userId: user._id }));
     }
   }, [user, dispatch]);
 
   return (
     <>
-      {!isAdmin && !hideNavbar && <Navbar />}
-      {!isAdmin && hideNavbar && null}
+      {!hideNavbar && <Navbar />}
       <Routes>
+        <Route
+          path="/adminLogin"
+          element={<AdminLogin />}
+        />
+        <Route
+          path="/admin/login"
+          element={<AdminLogin />}
+        />
         <Route
           path="/"
           element={
@@ -141,7 +155,6 @@ function App() {
         />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/orders" element={<OrderPage />} />
