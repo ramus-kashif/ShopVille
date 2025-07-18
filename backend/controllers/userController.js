@@ -286,6 +286,50 @@ const adminLoginController = async (req, res) => {
   }
 };
 
+// Add to wishlist
+export const addToWishlist = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { productId } = req.body;
+    if (!productId) return res.status(400).json({ success: false, message: 'Product ID required' });
+    const user = await userModel.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    if (!user.wishlist.includes(productId)) {
+      user.wishlist.push(productId);
+      await user.save();
+    }
+    return res.json({ success: true, wishlist: user.wishlist });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Error adding to wishlist', error: err.message });
+  }
+};
+// Remove from wishlist
+export const removeFromWishlist = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { productId } = req.body;
+    if (!productId) return res.status(400).json({ success: false, message: 'Product ID required' });
+    const user = await userModel.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    user.wishlist = user.wishlist.filter(id => id.toString() !== productId);
+    await user.save();
+    return res.json({ success: true, wishlist: user.wishlist });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Error removing from wishlist', error: err.message });
+  }
+};
+// Get wishlist
+export const getWishlist = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await userModel.findById(userId).populate('wishlist');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    return res.json({ success: true, wishlist: user.wishlist });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Error fetching wishlist', error: err.message });
+  }
+};
+
 export {
   registerController,
   loginController,

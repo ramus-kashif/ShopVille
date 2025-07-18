@@ -78,48 +78,63 @@ export default function Chatbot() {
     <>
       {/* Floating Chatbot Button */}
       <button
-        className="fixed bottom-8 right-8 z-50 bg-[#FF6B00] hover:bg-[#FF8C42] text-white rounded-full shadow-lg w-16 h-16 flex items-center justify-center transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#FF6B00]/30"
+        className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-[#FF6B00] to-[#FF8C42] hover:from-[#FF8C42] hover:to-[#FF6B00] text-white rounded-2xl shadow-2xl w-14 h-14 flex items-center justify-center transition-all duration-500 focus:outline-none focus:ring-4 focus:ring-[#FF6B00]/30 transform hover:scale-110 hover:rotate-3 group"
         onClick={() => setOpen((v) => !v)}
         aria-label="Open chatbot"
-        style={{ boxShadow: "0 4px 24px 0 rgba(0,0,0,0.18)" }}
+        style={{ 
+          boxShadow: "0 8px 32px 0 rgba(255,107,0,0.3)",
+          background: "linear-gradient(135deg, #FF6B00 0%, #FF8C42 100%)",
+          animation: "breathe 3s ease-in-out infinite"
+        }}
       >
-        <MessageCircle className="w-8 h-8" />
+        <div className="relative">
+          <MessageCircle className="w-6 h-6 transition-transform duration-300 group-hover:scale-110" />
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-bounce"></div>
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full"></div>
+          {/* Floating particles effect */}
+          <div className="absolute -top-2 -left-2 w-2 h-2 bg-yellow-300 rounded-full opacity-60 animate-ping" style={{ animationDelay: '0.5s' }}></div>
+          <div className="absolute -bottom-1 -right-2 w-1.5 h-1.5 bg-blue-300 rounded-full opacity-60 animate-ping" style={{ animationDelay: '1s' }}></div>
+        </div>
       </button>
 
       {/* Chat Panel */}
       <div
-        className={`fixed bottom-28 right-8 z-50 w-80 max-w-[90vw] bg-white rounded-2xl shadow-2xl border border-[#FF6B00]/20 flex flex-col transition-all duration-300 ${open ? "opacity-100 pointer-events-auto translate-y-0" : "opacity-0 pointer-events-none translate-y-8"}`}
-        style={{ minHeight: open ? 420 : 0, maxHeight: 500 }}
+        className={`fixed bottom-24 right-6 z-50 w-72 max-w-[90vw] bg-white rounded-3xl shadow-2xl border border-[#FF6B00]/20 flex flex-col transition-all duration-500 ${open ? "opacity-100 pointer-events-auto translate-y-0 scale-100" : "opacity-0 pointer-events-none translate-y-8 scale-95"}`}
+        style={{ minHeight: open ? 380 : 0, maxHeight: 480 }}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#FF6B00]/10 bg-[#FF6B00]/10 rounded-t-2xl">
-          <div className="flex items-center gap-2 font-bold text-[#FF6B00] text-lg">
-            <Bot className="w-6 h-6" /> Vill-E
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#FF6B00]/10 bg-gradient-to-r from-[#FF6B00]/10 to-[#FF8C42]/10 rounded-t-3xl">
+          <div className="flex items-center gap-2 font-bold text-[#FF6B00] text-base">
+            <div className="relative">
+              <Bot className="w-5 h-5" />
+              <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            </div>
+            Vill-E AI
           </div>
-          <button onClick={() => setOpen(false)} className="text-[#FF6B00] hover:text-[#FF8C42] p-1 rounded-full focus:outline-none">
-            <X className="w-6 h-6" />
+          <button onClick={() => setOpen(false)} className="text-[#FF6B00] hover:text-[#FF8C42] p-1 rounded-full focus:outline-none transition-colors duration-200">
+            <X className="w-5 h-5" />
           </button>
         </div>
-        <div ref={panelRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-white">
+        <div ref={panelRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-white">
           {messages.map((msg, i) => (
-            <div key={i} className={`flex ${msg.from === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`rounded-xl px-4 py-2 max-w-[80%] text-sm shadow ${msg.from === "user" ? "bg-[#FF6B00] text-white" : "bg-[#F8F9FA] text-[#1C1C1E]"}`}>
+            <div key={i} className={`flex ${msg.from === "user" ? "justify-end" : "justify-start"} animate-fade-in`}>
+              <div className={`rounded-2xl px-3 py-2 max-w-[85%] text-xs shadow-sm ${msg.from === "user" ? "bg-gradient-to-r from-[#FF6B00] to-[#FF8C42] text-white" : "bg-[#F8F9FA] text-[#1C1C1E] border border-[#E0E0E0]"}`}>
                 {msg.text}
               </div>
             </div>
           ))}
         </div>
-        <form onSubmit={handleSend} className="flex items-center gap-2 px-5 py-4 border-t border-[#FF6B00]/10 bg-[#F8F9FA] rounded-b-2xl">
+        <form onSubmit={handleSend} className="flex items-center gap-2 px-4 py-3 border-t border-[#FF6B00]/10 bg-[#F8F9FA] rounded-b-3xl">
           <input
             ref={inputRef}
             type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
-            placeholder="Type your question..."
-            className="flex-1 px-4 py-2 rounded-lg border border-[#E0E0E0] focus:border-[#FF6B00] focus:outline-none text-sm bg-white"
+            placeholder="Ask Vill-E anything..."
+            className="flex-1 px-3 py-2 rounded-xl border border-[#E0E0E0] focus:border-[#FF6B00] focus:outline-none text-xs bg-white"
             autoComplete="off"
           />
-          <button type="submit" className="bg-[#FF6B00] hover:bg-[#FF8C42] text-white rounded-lg p-2 transition-all duration-200 focus:outline-none">
-            <Send className="w-5 h-5" />
+          <button type="submit" className="bg-gradient-to-r from-[#FF6B00] to-[#FF8C42] hover:from-[#FF8C42] hover:to-[#FF6B00] text-white rounded-xl p-2 transition-all duration-300 focus:outline-none transform hover:scale-105">
+            <Send className="w-4 h-4" />
           </button>
         </form>
       </div>

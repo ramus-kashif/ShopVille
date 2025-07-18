@@ -59,10 +59,10 @@ export const logout = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
     } else {
       window.location.href = "/login";
     }
-
+    
     // Don't clear user's cart from localStorage - it will be restored on next login
     // Just clear the Redux state by setting user to null
-
+    
     return response;
   } catch (error) {
     // Even if the API call fails, clear local storage

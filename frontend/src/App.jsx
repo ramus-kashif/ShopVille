@@ -35,6 +35,15 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import socket from './store/socket.js';
 import { toast } from "react-toastify";
+import Wishlist from "./Pages/Wishlist";
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
 
 function App() {
   const location = useLocation();
@@ -66,14 +75,14 @@ function App() {
       const priceAlertHandler = (data) => {
         console.log('[Socket.IO] Received priceAlert:', data);
         if (data.newPrice < data.oldPrice) {
-          toast.info(`Price alert: ${data.title} dropped from PKR ${data.oldPrice} to PKR ${data.newPrice}`, {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          });
+        toast.info(`Price alert: ${data.title} dropped from PKR ${data.oldPrice} to PKR ${data.newPrice}`, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
         }
         // Always update cart prices on any priceAlert
         dispatch(getAllProducts()).then((action) => {
@@ -123,6 +132,7 @@ function App() {
 
   return (
     <>
+      <ScrollToTop />
       {!hideNavbar && <Navbar />}
       <Routes>
         <Route
@@ -161,6 +171,7 @@ function App() {
         <Route path="/success" element={<Success />} />
         <Route path="/cancel" element={<Cancel />} />
         <Route path="/auth/google/callback" element={<GoogleAuthCallback />} />
+        <Route path="/wishlist" element={<Wishlist />} />
 
         {/* Admin Routes */}
         <Route

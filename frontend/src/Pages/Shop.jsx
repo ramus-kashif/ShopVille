@@ -231,8 +231,8 @@ function Shop() {
       {/* Overlay Navbar at the top of the carousel */}
       <Navbar />
       {/* Image Carousel */}
-      <div className="relative mb-16 w-full">
-        <div className="relative h-[500px] lg:h-[600px] w-full overflow-hidden shadow-lg">
+      <div className="relative mb-8 w-full">
+        <div className="relative h-[300px] lg:h-[400px] w-full overflow-hidden shadow-lg">
           {carouselImages.map((image, index) => (
             <div
               key={index}
@@ -243,35 +243,10 @@ function Shop() {
               <img
                 src={image}
                 alt={`Carousel slide ${index + 1}`}
-                className="w-full h-full object-cover"
-                style={{ minWidth: '100vw', maxWidth: '100vw' }}
+                className="w-full h-full object-cover object-center"
+                style={{ minWidth: '100%', maxWidth: '100%' }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-              <div className="absolute bottom-16 left-16 right-16 text-white">
-                <h2 className="text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-                  Discover Amazing Products
-                </h2>
-                <p className="text-2xl lg:text-3xl opacity-90 max-w-3xl mb-8">
-                  Find the perfect items for your lifestyle with our curated collection
-                </p>
-                <div className="flex gap-4">
-                  <Link 
-                    to="/shop" 
-                    className="inline-flex items-center gap-3 bg-[#FF6B00] hover:bg-[#FF8C42] text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    Shop Now
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </Link>
-                  <Link 
-                    to="/shop" 
-                    className="inline-flex items-center gap-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 border border-white/30 hover:border-white/50"
-                  >
-                    View Categories
-                  </Link>
-                </div>
-              </div>
+
             </div>
           ))}
           {/* Modern Carousel Indicators */}
@@ -290,47 +265,36 @@ function Shop() {
         </div>
       </div>
       {/* Main Content with top padding to prevent overlap */}
-      <div className="pt-12">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-extrabold text-[#1C1C1E] mb-4">
-            Discover Amazing <span className="text-[#FF6B00]">Products</span>
-          </h1>
-          <p className="text-xl text-[#6C757D] max-w-3xl mx-auto leading-relaxed">
-            Find the perfect products for your lifestyle - from electronics to fashion and everything in between
-          </p>
-        </div>
-
+      <div className="pt-8">
         {/* Search Bar */}
-        <div className="flex justify-center mb-12">
+        <div className="flex justify-center mb-8">
           <form className="relative w-full max-w-3xl" onSubmit={handleSearchSubmit}>
-            <div className="relative flex items-center bg-white border-2 border-[#E0E0E0] rounded-xl shadow-sm px-6 py-4 focus-within:border-[#FF6B00] transition-all duration-300">
+            <div className="relative flex items-center bg-white border-2 border-[#E0E0E0] rounded-2xl shadow-sm px-4 py-3 focus-within:border-[#FF6B00] transition-all duration-300">
               <button
                 type="submit"
-                className="flex items-center justify-center bg-[#FF6B00] hover:bg-[#FF8C42] text-white rounded-lg w-14 h-14 shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/20 mr-4"
+                className="flex items-center justify-center bg-[#FF6B00] hover:bg-[#FF8C42] text-white rounded-xl w-10 h-10 shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#FF6B00]/20 mr-3"
                 aria-label="Search"
               >
-                <Search className="w-6 h-6" />
+                <Search className="w-5 h-5" />
               </button>
               <input
                 type="text"
                 placeholder="Search for amazing products..."
                 value={search}
                 onChange={handleSearch}
-                className="flex-1 border-none bg-transparent px-4 py-3 focus:outline-none text-lg placeholder-[#6C757D] text-[#1C1C1E]"
-                style={{ fontSize: '1.1rem' }}
+                className="flex-1 border-none bg-transparent px-3 py-2 focus:outline-none text-base placeholder-[#6C757D] text-[#1C1C1E]"
               />
               
               {/* AI Image Search Icon */}
               <button
                 type="button"
                 onClick={handleImageIconClick}
-                className="ml-4 flex items-center justify-center bg-[#F8F9FA] hover:bg-[#EDEDED] rounded-lg w-14 h-14 transition-all duration-200 focus:outline-none border border-[#E0E0E0] hover:border-[#FF6B00] text-[#6C757D] hover:text-[#FF6B00]"
+                className="ml-3 flex items-center justify-center bg-[#F8F9FA] hover:bg-[#EDEDED] rounded-xl w-10 h-10 transition-all duration-200 focus:outline-none border border-[#E0E0E0] hover:border-[#FF6B00] text-[#6C757D] hover:text-[#FF6B00]"
                 tabIndex={-1}
                 aria-label="AI Image Search"
                 title="Search by Image (AI)"
               >
-                <Sparkles className="w-6 h-6" />
+                <Sparkles className="w-5 h-5" />
               </button>
               <input
                 type="file"
@@ -342,7 +306,7 @@ function Shop() {
               <button
                 type="button"
                 onClick={handleVoiceSearch}
-                className={`ml-4 flex items-center justify-center bg-[#F8F9FA] hover:bg-[#EDEDED] rounded-lg w-14 h-14 transition-all duration-200 focus:outline-none border border-[#E0E0E0] hover:border-[#FF6B00] ${isListening ? 'text-[#DC3545] animate-pulse' : 'text-[#6C757D] hover:text-[#FF6B00]'}`}
+                className={`ml-3 flex items-center justify-center bg-[#F8F9FA] hover:bg-[#EDEDED] rounded-xl w-10 h-10 transition-all duration-200 focus:outline-none border border-[#E0E0E0] hover:border-[#FF6B00] ${isListening ? 'text-[#DC3545] animate-pulse' : 'text-[#6C757D] hover:text-[#FF6B00]'}`}
                 tabIndex={-1}
                 aria-label="Voice search"
               >
@@ -391,68 +355,14 @@ function Shop() {
         </div>
 
         {/* Products Section - moved up for better accessibility */}
-        <div className="w-full mb-16">
-          {/* Image Search Results - New prominent display */}
-          {imageSearchMessage && (
-            <div className="mb-8 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl shadow-lg">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-gray-800">AI Image Search Results</h3>
-                    <p className="text-xs text-gray-600">
-                      {imageSearchMessage}
-                      {imageSearchFallback && (
-                        <span className="ml-2 text-yellow-600 font-medium">(Fallback method used)</span>
-                      )}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    setImageSearchMessage("");
-                    setImageSearchFallback(false);
-                    // Reset to show all products
-                    dispatch(searchProducts({ search: "", page: 1, limit: pageSize }));
-                  }}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                  aria-label="Close image search results"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              {/* Show the found products in a minimized, focused grid */}
-              {products?.products && products.products.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  {products.products.map((product) => (
-                    <Link key={product._id} to={`/product/${product._id}`} className="block bg-white rounded-lg p-2 border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
-                        <img
-                          src={product.picture?.secure_url || "/placeholder.png"}
-                          alt={product.title}
-                        className="w-full h-24 object-cover rounded mb-2"
-                        />
-                      <h4 className="font-semibold text-gray-800 text-sm mb-1 truncate">{product.title}</h4>
-                      <p className="text-xs text-gray-600 mb-1 truncate">{product.category?.name}</p>
-                      <p className="text-[#FF6B00] font-bold text-sm">PKR {product.price}</p>
-                      </Link>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center text-gray-500 py-8">No products found for this image.</div>
-              )}
-            </div>
-          )}
+        <div className="w-full mb-8">
 
           {/* Hide the rest of the product grid/info when image search is active */}
           {!imageSearchMessage && (
             <>
           {/* Results Info */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="text-[#6C757D]">
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-sm text-[#6C757D]">
               Showing {products?.products?.length || 0} of {total} products
               {selectedCategory && (
                 <span className="ml-3 text-[#FF6B00] font-semibold">
@@ -463,13 +373,15 @@ function Shop() {
           </div>
 
           {/* Products Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {products &&
-              Array.isArray(products.products) &&
-              products.products.map((product) => (
-                <ProductCard key={product._id} product={product} />
-              ))}
-          </div>
+          {(showSearchResults || imageSearchMessage) ? null : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {products &&
+                Array.isArray(products.products) &&
+                products.products.map((product) => (
+                  <ProductCard key={product._id} product={product} />
+                ))}
+            </div>
+          )}
 
           {/* No Products Message */}
           {(!products?.products || products.products.length === 0) && (
@@ -523,27 +435,27 @@ function Shop() {
         </div>
 
         {/* Features Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          <div className="text-center p-8 bg-[#F8F9FA] rounded-2xl border border-[#E0E0E0]">
-            <div className="w-16 h-16 bg-[#FF6B00] rounded-full flex items-center justify-center mx-auto mb-4">
-              <Shield className="w-8 h-8 text-white" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="text-center p-6 bg-[#F8F9FA] rounded-2xl border border-[#E0E0E0]">
+            <div className="w-10 h-10 bg-[#FF6B00] rounded-full flex items-center justify-center mx-auto mb-3">
+              <Shield className="w-5 h-5 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-[#1C1C1E] mb-2">Premium Quality</h3>
-            <p className="text-[#6C757D]">Curated selection of high-end products</p>
+            <h3 className="text-sm font-bold text-[#1C1C1E] mb-2">Premium Quality</h3>
+            <p className="text-xs text-[#6C757D]">Curated selection of high-end products</p>
           </div>
-          <div className="text-center p-8 bg-[#F8F9FA] rounded-2xl border border-[#E0E0E0]">
-            <div className="w-16 h-16 bg-[#FF6B00] rounded-full flex items-center justify-center mx-auto mb-4">
-              <Truck className="w-8 h-8 text-white" />
+          <div className="text-center p-6 bg-[#F8F9FA] rounded-2xl border border-[#E0E0E0]">
+            <div className="w-10 h-10 bg-[#FF6B00] rounded-full flex items-center justify-center mx-auto mb-3">
+              <Truck className="w-5 h-5 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-[#1C1C1E] mb-2">Fast Delivery</h3>
-            <p className="text-[#6C757D]">Express shipping to your doorstep</p>
+            <h3 className="text-sm font-bold text-[#1C1C1E] mb-2">Fast Delivery</h3>
+            <p className="text-xs text-[#6C757D]">Express shipping to your doorstep</p>
           </div>
-          <div className="text-center p-8 bg-[#F8F9FA] rounded-2xl border border-[#E0E0E0]">
-            <div className="w-16 h-16 bg-[#FF6B00] rounded-full flex items-center justify-center mx-auto mb-4">
-              <CreditCard className="w-8 h-8 text-white" />
+          <div className="text-center p-6 bg-[#F8F9FA] rounded-2xl border border-[#E0E0E0]">
+            <div className="w-10 h-10 bg-[#FF6B00] rounded-full flex items-center justify-center mx-auto mb-3">
+              <CreditCard className="w-5 h-5 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-[#1C1C1E] mb-2">Secure Payment</h3>
-            <p className="text-[#6C757D]">Multiple secure payment options</p>
+            <h3 className="text-sm font-bold text-[#1C1C1E] mb-2">Secure Payment</h3>
+            <p className="text-xs text-[#6C757D]">Multiple secure payment options</p>
           </div>
         </div>
       </div>

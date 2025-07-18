@@ -9,6 +9,7 @@ import {
   getMyReviews,
   getAllReviews,
   verifyReview,
+  adminReplyToReview,
 } from "../controllers/reviewController.js";
 
 import { isAuthorized as isAuthenticatedUser, isAdmin as authorizeRoles } from "../middlewares/authMiddleware.js";
@@ -30,5 +31,6 @@ router.route("/reviews/me").get(isAuthenticatedUser, getMyReviews);
 // Admin routes
 router.route("/admin/reviews").get(isAuthenticatedUser, authorizeRoles, getAllReviews);
 router.route("/admin/review/:id/verify").put(isAuthenticatedUser, authorizeRoles, verifyReview);
+router.route("/admin/review/:id/reply").put(isAuthenticatedUser, authorizeRoles, adminReplyToReview);
 
 export default router; 

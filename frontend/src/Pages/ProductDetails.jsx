@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { ShoppingCart, Star, Truck, Shield, ArrowLeft, Package, Heart, CheckCircle, Clock, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 import ReviewSection from "@/components/ReviewSection";
+import { addToWishlist, removeFromWishlist } from '@/store/features/wishlist/wishlistSlice';
 
 function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
@@ -24,6 +25,8 @@ function ProductDetails() {
   const status = useSelector((state) => state.products.status);
   const error = useSelector((state) => state.products.error);
   const user = useSelector((state) => state.auth.user);
+  const wishlist = useSelector((state) => state.wishlist.wishlist) || [];
+  const isInWishlist = wishlist.some(item => item._id === productId);
 
   const handleDecrement = () => {
     setQuantity((prevQuantity) => (prevQuantity > 1 ? prevQuantity - 1 : 1));
@@ -68,6 +71,15 @@ function ProductDetails() {
     });
   };
 
+  const handleAddToWishlist = () => {
+    dispatch(addToWishlist(productId));
+    toast.success("Product added to wishlist!", { autoClose: 2000 });
+  };
+  const handleRemoveFromWishlist = () => {
+    dispatch(removeFromWishlist(productId));
+    toast.info("Product removed from wishlist!", { autoClose: 2000 });
+  };
+
   useEffect(() => {
     dispatch(getSingleProduct(productId));
   }, [productId, dispatch]);
@@ -78,7 +90,7 @@ function ProductDetails() {
     }
   }, [products]);
   
-  const { title, price, picture, description, category, discount, stock } = productDetails;
+  const { title, price, picture, description, category, discount, stock, averageRating = 0 } = productDetails;
   const pictureUrl = picture?.secure_url || "";
   const categoryName = category?.name || "";
 
@@ -101,46 +113,6 @@ Technical Specifications:
 • Warranty: Comprehensive coverage for peace of mind
 
 Don't miss out on this opportunity to own a product that truly makes a difference. Order now and experience the quality that sets us apart from the competition.`;
-
-  // Sample reviews data
-  const sampleReviews = [
-    {
-      id: 1,
-      user: "Sarah Johnson",
-      rating: 5,
-      title: "Absolutely Amazing Product!",
-      comment: "This product exceeded all my expectations. The quality is outstanding and it works perfectly. Highly recommend!",
-      date: "2024-01-15",
-      helpful: 12
-    },
-    {
-      id: 2,
-      user: "Michael Chen",
-      rating: 5,
-      title: "Best Purchase This Year",
-      comment: "I've been using this for 3 months now and it's still as good as new. The design is beautiful and functionality is top-notch.",
-      date: "2024-01-10",
-      helpful: 8
-    },
-    {
-      id: 3,
-      user: "Emily Rodriguez",
-      rating: 4,
-      title: "Great Value for Money",
-      comment: "Really happy with this purchase. The quality is excellent and it arrived quickly. Would definitely buy again!",
-      date: "2024-01-08",
-      helpful: 5
-    },
-    {
-      id: 4,
-      user: "David Thompson",
-      rating: 5,
-      title: "Exceeds Expectations",
-      comment: "This product is simply fantastic. The attention to detail is remarkable and it performs flawlessly. Worth every penny!",
-      date: "2024-01-05",
-      helpful: 15
-    }
-  ];
 
   if (status === "loading") {
     return (
@@ -200,9 +172,21 @@ Don't miss out on this opportunity to own a product that truly makes a differenc
                     className="w-full h-96 lg:h-[500px] object-contain rounded-2xl shadow-sm transition-transform duration-300 group-hover:scale-105"
                   />
                   <div className="absolute top-4 right-4">
-                    <button className="w-12 h-12 bg-white/90 hover:bg-white backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 border border-[#E0E0E0]">
-                      <Heart className="w-5 h-5 text-[#6C757D] hover:text-[#DC3545]" />
-                    </button>
+                    {isInWishlist ? (
+                      <button
+                        onClick={handleRemoveFromWishlist}
+                        className="w-12 h-12 bg-[#DC3545] hover:bg-[#A71D2A] rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 border border-[#E0E0E0]"
+                      >
+                        <Heart className="w-6 h-6 text-[#FF6B00]" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleAddToWishlist}
+                        className="w-12 h-12 bg-[#6C757D] hover:bg-[#343A40] rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 border border-[#E0E0E0]"
+                      >
+                        <Heart className="w-6 h-6 text-[#FF6B00]" />
+                      </button>
+                    )}
                   </div>
                   
                   {/* Discount Badge */}
@@ -236,7 +220,7 @@ Don't miss out on this opportunity to own a product that truly makes a differenc
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1">
                       {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="w-5 h-5 text-[#FF6B00] fill-current" />
+                        <Star key={i} className={`w-5 h-5 ${i < Math.floor(averageRating) ? 'text-[#FF6B00] fill-current' : 'text-[#E0E0E0]'}`} />
                       ))}
                     </div>
                     <span className="text-[#6C757D]">(4.8 • 127 reviews)</span>
@@ -425,68 +409,8 @@ Don't miss out on this opportunity to own a product that truly makes a differenc
 
         {/* Sample Reviews Section */}
         <div className="max-w-7xl mx-auto mt-12">
-          <div className="bg-white rounded-3xl shadow-sm p-8 lg:p-12 border border-[#E0E0E0]">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-bold text-[#1C1C1E] flex items-center gap-3">
-                <Star className="w-8 h-8 text-[#FF6B00]" />
-                Customer Reviews
-              </h2>
-              <div className="text-right">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="flex items-center gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 text-[#FF6B00] fill-current" />
-                    ))}
-                  </div>
-                  <span className="text-lg font-semibold text-[#1C1C1E]">4.8</span>
-                </div>
-                <p className="text-[#6C757D]">Based on 127 reviews</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {sampleReviews.map((review, index) => (
-                <div 
-                  key={review.id}
-                  className="bg-[#F8F9FA] rounded-2xl p-6 border border-[#E0E0E0] hover:border-[#FF6B00]/30 transition-all duration-300"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h4 className="font-semibold text-[#1C1C1E]">{review.title}</h4>
-                      <p className="text-sm text-[#6C757D]">by {review.user}</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star 
-                          key={i} 
-                          className={`w-4 h-4 ${i < review.rating ? 'text-[#FF6B00] fill-current' : 'text-[#E0E0E0]'}`} 
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <p className="text-[#6C757D] mb-4 leading-relaxed">{review.comment}</p>
-                  <div className="flex items-center justify-between text-sm text-[#6C757D]">
-                    <span>{new Date(review.date).toLocaleDateString()}</span>
-                    <span className="flex items-center gap-1">
-                      <CheckCircle className="w-4 h-4 text-[#28A745]" />
-                      {review.helpful} found this helpful
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="text-center mt-8">
-              <button className="bg-[#FF6B00] hover:bg-[#FF8C42] text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105">
-                View All Reviews
-              </button>
-            </div>
-          </div>
+          <ReviewSection productId={productId} />
         </div>
-
-        {/* Reviews Section */}
-        <ReviewSection productId={productId} />
       </div>
     </div>
   );

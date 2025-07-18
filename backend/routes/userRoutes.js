@@ -7,6 +7,9 @@ import {
   registerController,
   updateUserController,
   deleteUserController,
+  addToWishlist,
+  removeFromWishlist,
+  getWishlist,
 } from "../controllers/userController.js";
 import { isAdmin, isAuthorized } from "../middlewares/authMiddleware.js";
 import { upload } from "../middlewares/multerMiddleware.js";
@@ -51,6 +54,11 @@ userRouter.post("/upload-profile-picture", isAuthorized, upload.single("picture"
     res.status(500).json({ success: false, message: "Error uploading profile picture" });
   }
 });
+
+// Wishlist endpoints
+userRouter.post("/wishlist/add", isAuthorized, addToWishlist);
+userRouter.post("/wishlist/remove", isAuthorized, removeFromWishlist);
+userRouter.get("/wishlist", isAuthorized, getWishlist);
 
 // Admin Routes
 

@@ -248,3 +248,22 @@ export const verifyReview = catchAsyncErrors(async (req, res, next) => {
     review,
   });
 }); 
+
+// Admin reply to a review => /api/v1/admin/review/:id/reply
+export const adminReplyToReview = catchAsyncErrors(async (req, res, next) => {
+  const { text } = req.body;
+  const review = await Review.findById(req.params.id);
+  if (!review) {
+    return next(new ErrorHandler("Review not found", 404));
+  }
+  // Only allow one reply per review
+  review.adminReply = {
+    text,
+    date: new Date(),
+  };
+  await review.save();
+  res.status(200).json({
+    success: true,
+    review,
+  });
+}); 

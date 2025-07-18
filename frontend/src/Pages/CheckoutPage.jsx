@@ -24,10 +24,20 @@ export default function CheckoutPage() {
     0
   );
 
+  const getUserData = () => {
+    // Try Redux first, then localStorage
+    const reduxUser = user?.user;
+    if (reduxUser) return reduxUser;
+    try {
+      const localUser = JSON.parse(localStorage.getItem('user'));
+      if (localUser) return localUser;
+    } catch {}
+    return {};
+  };
+
   const handleCashOnDelivery = async () => {
     try {
-      // Get user info from Redux (full response object)
-      const userData = user?.user || {};
+      const userData = getUserData();
       const res = await fetch("http://localhost:8080/api/v1/orders/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -43,8 +53,8 @@ export default function CheckoutPage() {
       });
       const data = await res.json();
       if (data.success) {
-        if (user?.user?._id) {
-          dispatch(clearCartWithBackendSync({ userId: user.user._id }));
+        if (userData._id) {
+          dispatch(clearCartWithBackendSync({ userId: userData._id }));
         } else {
           dispatch(clearCart({ userId: null }));
         }
@@ -273,12 +283,21 @@ export default function CheckoutPage() {
                       Multiple card types accepted
                     </li>
                   </ul>
-                  <button
-                    onClick={handleStripePayment}
-                    className="w-full mt-4 bg-[#007BFF] hover:bg-[#0056B3] text-white py-3 px-6 rounded-lg font-semibold transition-colors duration-200"
-                  >
-                    Pay with Card
-                  </button>
+                  <div className="relative">
+                    {!navigator.onLine && (
+                      <div className="absolute -top-8 left-0 w-full text-center text-xs bg-gray-100 text-gray-500 rounded px-2 py-1 mb-2 shadow-sm border border-gray-200">
+                        Internet connection required for online payments
+                      </div>
+                    )}
+                    <button
+                      onClick={handleStripePayment}
+                      disabled={!navigator.onLine}
+                      className={`w-full mt-4 bg-[#007BFF] hover:bg-[#0056B3] text-white py-3 px-6 rounded-lg font-semibold transition-colors duration-200
+                        ${!navigator.onLine ? 'opacity-60 cursor-not-allowed bg-gray-400 hover:bg-gray-400' : ''}`}
+                    >
+                      Pay with Card
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

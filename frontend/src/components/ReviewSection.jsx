@@ -168,11 +168,7 @@ function ReviewSection({ productId }) {
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-5 h-5 ${
-                      i < Math.floor(averageRating)
-                        ? "text-gold-400 fill-current"
-                        : "text-gray-400"
-                    }`}
+                    className={`w-5 h-5 ${i < Math.floor(averageRating) ? 'text-[#FF6B00] fill-current' : 'text-gray-400'}`}
                   />
                 ))}
               </div>
@@ -222,7 +218,7 @@ function ReviewSection({ productId }) {
                       <Star
                         className={`w-8 h-8 ${
                           star <= reviewData.rating
-                            ? "text-gold-400 fill-current"
+                            ? "text-[#FF6B00] fill-current"
                             : "text-gray-400"
                         }`}
                       />
@@ -327,10 +323,7 @@ function ReviewSection({ productId }) {
           </div>
         ) : reviews.length > 0 ? (
           reviews.map((review) => (
-            <div
-              key={review._id}
-              className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10"
-            >
+            <div key={review._id} className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10 mb-4">
               {/* Review Header */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -348,7 +341,7 @@ function ReviewSection({ productId }) {
                             key={i}
                             className={`w-3 h-3 ${
                               i < review.rating
-                                ? "text-gold-400 fill-current"
+                                ? "text-[#FF6B00] fill-current"
                                 : "text-gray-400"
                             }`}
                           />
@@ -384,6 +377,18 @@ function ReviewSection({ productId }) {
                       className="w-full h-20 object-cover rounded-lg"
                     />
                   ))}
+                </div>
+              )}
+
+              {/* Admin Reply */}
+              {review.adminReply && review.adminReply.text && (
+                <div className="mt-4 ml-6 pl-4 border-l-4 border-blue-400 bg-blue-50/10 rounded">
+                  <div className="flex items-center gap-2 mb-1">
+                    <MessageCircle className="w-4 h-4 text-blue-400" />
+                    <span className="font-semibold text-blue-400">Admin Reply</span>
+                    <span className="text-xs text-gray-400 ml-2">{formatDate(review.adminReply.date)}</span>
+                  </div>
+                  <div className="text-blue-200">{review.adminReply.text}</div>
                 </div>
               )}
 

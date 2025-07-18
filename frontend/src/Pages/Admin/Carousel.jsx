@@ -275,61 +275,53 @@ function Carousel() {
       )}
 
       {/* Images Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {images.map((image) => (
-          <Card key={image._id} className="overflow-hidden">
-            <div className="relative h-48 bg-gray-100">
-              <img
-                src={image.imageUrl}
-                alt={image.title}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute top-2 right-2 flex gap-1">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => toggleActive(image._id, image.isActive)}
-                  className={`${image.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}
-                >
-                  {image.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                </Button>
+      <div className="relative w-full" style={{ zIndex: 1, marginTop: '60px' }}>
+        <div className="relative h-[500px] lg:h-[600px] w-full overflow-hidden" style={{ boxShadow: 'none' }}>
+          {images.map((image) => (
+            <Card key={image._id} className="overflow-hidden">
+              <div className="relative h-48 bg-gray-100">
+                <img
+                  src={image.imageUrl}
+                  alt={image.title}
+                  className="w-full h-full object-cover"
+                />
               </div>
-            </div>
-            <CardContent className="p-4">
-              <h3 className="font-semibold text-gray-900 mb-1">{image.title}</h3>
-              {image.description && (
-                <p className="text-sm text-gray-600 mb-2">{image.description}</p>
-              )}
-              <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
-                <span>Order: {image.order}</span>
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  image.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                }`}>
-                  {image.isActive ? 'Active' : 'Inactive'}
-                </span>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleEdit(image)}
-                  className="flex-1"
-                >
-                  <Edit className="w-4 h-4 mr-1" />
-                  Edit
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleDelete(image._id)}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-gray-900 mb-1">{image.title}</h3>
+                {image.description && (
+                  <p className="text-sm text-gray-600 mb-2">{image.description}</p>
+                )}
+                <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
+                  <span>Order: {image.order}</span>
+                  <span className={`px-2 py-1 rounded-full text-xs ${
+                    image.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                  }`}>
+                    {image.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleEdit(image)}
+                    className="flex-1"
+                  >
+                    <Edit className="w-4 h-4 mr-1" />
+                    Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDelete(image._id)}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
 
       {/* Empty State */}

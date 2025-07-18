@@ -196,6 +196,14 @@ export default function Navbar() {
               <Package className="w-4 h-4" />
               <span>Shop</span>
             </Link>
+            {/* Wishlist Link */}
+            <Link 
+              to="/wishlist" 
+              className="flex items-center space-x-2 text-[#1C1C1E] hover:text-[#FF6B00] transition-colors duration-200 font-medium"
+            >
+              <Heart className="w-4 h-4" />
+              <span>Wishlist</span>
+            </Link>
 
             {/* Contact Link */}
             <Link 
@@ -209,18 +217,6 @@ export default function Navbar() {
 
           {/* Right Side - Search, Cart, Profile */}
           <div className="flex items-center space-x-4">
-            {/* Search Bar */}
-            <div className="hidden md:flex items-center relative">
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64 px-4 py-2 pl-10 pr-4 border-2 border-[#E0E0E0] rounded-xl bg-white text-[#1C1C1E] placeholder-[#6C757D] focus:border-[#FF6B00] focus:ring-4 focus:ring-[#FF6B00]/10 focus:outline-none transition-all duration-200"
-              />
-              <Search className="absolute left-3 w-4 h-4 text-[#6C757D]" />
-            </div>
-
             {/* Cart Icon */}
             <Link 
               to="/cart" 
