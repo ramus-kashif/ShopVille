@@ -12,6 +12,7 @@ const isAuthorized = async (req, res, next) => {
     }
     const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
     req.user = await userModel.findById(decodedToken.id);
+    console.log('[AUTH] isAuthorized: req.user =', req.user);
     next();
   } catch (error) {
     console.log(`isAuthorized middleware Error ${error}`);

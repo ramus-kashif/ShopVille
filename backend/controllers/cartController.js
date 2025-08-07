@@ -4,7 +4,12 @@ import Product from '../models/productsModel.js';
 // Get user's cart
 export const getCart = async (req, res) => {
   const userId = req.user._id;
-  const cart = await Cart.findOne({ userId }).populate('items.productId');
+  let cart = await Cart.findOne({ userId }).populate('items.productId');
+  if (!cart) {
+    cart = new Cart({ userId, items: [] });
+    await cart.save();
+    cart = await Cart.findOne({ userId }).populate('items.productId');
+  }
   res.json({ success: true, cart });
 };
 

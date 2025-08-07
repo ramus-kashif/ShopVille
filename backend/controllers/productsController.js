@@ -193,32 +193,32 @@ const updateSingleProductController = async (req, res) => {
       product.picture = { secure_url, public_id };
       await product.save();
       // === PRICE ALERT LOGIC ===
-      if (price && Number(price) < oldPrice) {
-        // Find all carts with this product
-        const carts = await Cart.find({ 'items.productId': productId }).populate('userId');
-        for (const cart of carts) {
-          const user = cart.userId;
-          if (user && user.email) {
-            console.log(`[Socket.IO] Emitting priceAlert to user room: ${user._id} for product ${productId} (old: ${oldPrice}, new: ${price})`);
-            io.to(user._id.toString()).emit('priceAlert', {
-              productId,
-              newPrice: Number(price),
-              oldPrice,
-              title: product.title,
-            });
-            // Send email (optional - won't break if email fails)
-            try {
-              await sendEmail({
-                to: user.email,
-                subject: `Price Alert: ${product.title}`,
-                text: `The price of ${product.title} has dropped from PKR ${oldPrice} to PKR ${price}.`,
-                html: `<p>The price of <b>${product.title}</b> has dropped from <b>PKR ${oldPrice}</b> to <b>PKR ${price}</b>.</p>`,
-              });
-            } catch (emailError) {
-              console.error('Email sending failed:', emailError);
+          if (price && Number(price) < oldPrice) {
+            // Find all carts with this product
+            const carts = await Cart.find({ 'items.productId': productId }).populate('userId');
+            for (const cart of carts) {
+              const user = cart.userId;
+              if (user && user.email) {
+                console.log(`[Socket.IO] Emitting priceAlert to user room: ${user._id} for product ${productId} (old: ${oldPrice}, new: ${price})`);
+                io.to(user._id.toString()).emit('priceAlert', {
+                  productId,
+                  newPrice: Number(price),
+                  oldPrice,
+                  title: product.title,
+                });
+                // Optionally send email (not required for notification)
+                try {
+                  await sendEmail({
+                    to: user.email,
+                    subject: `Price Alert: ${product.title}`,
+                    text: `The price of ${product.title} has dropped from PKR ${oldPrice} to PKR ${price}.`,
+                    html: `<p>The price of <b>${product.title}</b> has dropped from <b>PKR ${oldPrice}</b> to <b>PKR ${price}</b>.</p>`,
+                  });
+                } catch (emailError) {
+                  console.error('Email sending failed:', emailError);
+                }
+              }
             }
-          }
-        }
       }
       return res.status(200).send({
         success: true,

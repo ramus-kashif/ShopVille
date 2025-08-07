@@ -69,6 +69,10 @@ export default function RegisterPage() {
       .then((response) => {
         if (response?.success == true) {
           toast.success(response?.message, { autoClose: 2000 });
+          // Load user's cart after registration
+          if (response?.user?._id) {
+            dispatch(loadUserCart({ userId: response.user._id }));
+          }
           setTimeout(() => {
             navigate("/login");
           }, 2000);

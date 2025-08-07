@@ -53,10 +53,10 @@ export default function CheckoutPage() {
       });
       const data = await res.json();
       if (data.success) {
-        if (userData._id) {
-          dispatch(clearCartWithBackendSync({ userId: userData._id }));
-        } else {
-          dispatch(clearCart({ userId: null }));
+          if (userData._id) {
+            dispatch(clearCartWithBackendSync({ userId: userData._id }));
+          } else {
+            dispatch(clearCartWithBackendSync({ userId: null }));
         }
         toast.success("Order placed with Cash on Delivery", { autoClose: 1500 });
         navigate("/orders");
@@ -289,14 +289,14 @@ export default function CheckoutPage() {
                         Internet connection required for online payments
                       </div>
                     )}
-                    <button
-                      onClick={handleStripePayment}
+                  <button
+                    onClick={handleStripePayment}
                       disabled={!navigator.onLine}
                       className={`w-full mt-4 bg-[#007BFF] hover:bg-[#0056B3] text-white py-3 px-6 rounded-lg font-semibold transition-colors duration-200
                         ${!navigator.onLine ? 'opacity-60 cursor-not-allowed bg-gray-400 hover:bg-gray-400' : ''}`}
-                    >
-                      Pay with Card
-                    </button>
+                  >
+                    Pay with Card
+                  </button>
                   </div>
                 </div>
               </div>

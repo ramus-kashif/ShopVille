@@ -185,7 +185,7 @@ Don't miss out on this opportunity to own a product that truly makes a differenc
                         className="w-12 h-12 bg-[#6C757D] hover:bg-[#343A40] rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 border border-[#E0E0E0]"
                       >
                         <Heart className="w-6 h-6 text-[#FF6B00]" />
-                      </button>
+                    </button>
                     )}
                   </div>
                   

@@ -1,5 +1,7 @@
 // controllers/orderController.js
 import Order from "../models/orderModel.js";
+import Product from "../models/productsModel.js";
+import { io } from "../server.js";
 
 // Create order: Cash on Delivery
 export const createCashOnDeliveryOrder = async (req, res) => {
@@ -132,3 +134,25 @@ export const getAllOrders = async (req, res) => {
     res.status(500).json({ success: false, message: "Error fetching orders", error: error.message });
   }
 };
+
+async function updateStockAndNotify(cartItems) {
+  for (const item of cartItems) {
+    const product = await Product.findById(item.productId);
+    if (product) {
+      console.log(`[STOCK] Before update: ${product.title} (Stock: ${product.stock}), Decrement by: ${item.quantity || 1}`);
+      product.stock = Math.max(0, product.stock - (item.quantity || 1));
+      await product.save();
+      console.log(`[STOCK] After update: ${product.title} (Stock: ${product.stock})`);
+      if (product.stock <= 3) {
+        io.to('admin').emit("lowStock", {
+          productId: product._id,
+          title: product.title,
+          stock: product.stock,
+        });
+        console.log(`[SOCKET.IO] lowStock emitted to admin room for product: ${product.title} (Stock: ${product.stock})`);
+      }
+    } else {
+      console.log(`[STOCK] Product not found for productId: ${item.productId}`);
+    }
+  }
+}

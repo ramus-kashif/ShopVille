@@ -7,7 +7,6 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-
 import userRoutes from "./routes/userRoutes.js";
 import CategoriesRoutes from "./routes/CategoriesRoutes.js";
 import productsRoutes from "./routes/productsRoutes.js";
@@ -69,6 +68,10 @@ server.listen(PORT, () => {
       if (userId) {
         socket.join(userId);
         console.log(`[Socket.IO] User joined room: ${userId} (socket: ${socket.id})`);
+        // List all rooms for this socket
+        setTimeout(() => {
+          console.log(`[Socket.IO] Rooms for socket ${socket.id}:`, Array.from(socket.rooms));
+        }, 500);
       } else {
         console.log('[Socket.IO] join event received with no userId');
       }

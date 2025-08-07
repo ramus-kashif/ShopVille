@@ -58,38 +58,35 @@ function App() {
   useEffect(() => {
     if (user?._id) {
       dispatch(initializeCart({ userId: user._id }));
-      // Only connect if not already connected
       if (!socket.connected) {
         socket.connect();
       }
+      const userRoom = user._id?.toString();
       const handleConnect = () => {
-        // Only emit join if not already in the room
-        console.log('[Socket.IO] Emitting join for user:', user._id);
-        socket.emit('join', user._id);
+        socket.emit('join', userRoom);
+        setTimeout(() => {
+          console.log('[Socket.IO] Join event sent for user:', user._id, 'Socket connected:', socket.connected);
+        }, 500);
       };
       const handleConnectError = (error) => {
-        // Only log critical errors
-        // Optionally, you can toast or report this
         console.error('[Socket.IO] Connection error:', error);
       };
       const priceAlertHandler = (data) => {
-        console.log('[Socket.IO] Received priceAlert:', data);
+        console.log('[Socket.IO] Received priceAlert:', data, 'Socket ID:', socket.id);
         if (data.newPrice < data.oldPrice) {
-        toast.info(`Price alert: ${data.title} dropped from PKR ${data.oldPrice} to PKR ${data.newPrice}`, {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
+          toast.info(`Price alert: ${data.title} dropped from PKR ${data.oldPrice} to PKR ${data.newPrice}`, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
         }
-        // Always update cart prices on any priceAlert
-        dispatch(getAllProducts()).then((action) => {
-          if (action.payload && action.payload.products) {
-            dispatch(updateCartPrices({ products: action.payload.products }));
-          }
-        });
+        dispatch(updateCartPrices({ products: [data] }));
+        if (user?._id) {
+          dispatch(fetchUserCart(user._id));
+        }
       };
       socket.off('connect', handleConnect);
       socket.off('connect_error', handleConnectError);
@@ -101,22 +98,24 @@ function App() {
         socket.off('connect', handleConnect);
         socket.off('connect_error', handleConnectError);
         socket.off('priceAlert', priceAlertHandler);
-        // Disconnect socket on logout
         if (!user?._id && socket.connected) {
           console.log('[Socket.IO] Disconnecting socket (user logged out)');
           socket.disconnect();
         }
       };
     } else {
-      // Only disconnect if connected
       if (socket.connected) {
         console.log('[Socket.IO] Disconnecting socket (no user)');
         socket.disconnect();
       }
     }
+  }, [socket, user, dispatch]);
+  useEffect(() => {
+    if (user?._id) {
+      dispatch(loadUserCart(user._id));
+      dispatch(fetchUserCart(user._id)); // Restore legacy usage
+    }
   }, [user, dispatch]);
-
-  // Update cart prices when products change
   useEffect(() => {
     if (products && products.products && Array.isArray(products.products)) {
       dispatch(updateCartPrices({ products: products.products }));
@@ -126,7 +125,7 @@ function App() {
   // Load user's cart when user changes
   useEffect(() => {
     if (user?._id) {
-      dispatch(loadUserCart({ userId: user._id }));
+      dispatch(loadUserCart(user._id));
     }
   }, [user, dispatch]);
 

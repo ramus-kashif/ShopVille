@@ -86,7 +86,7 @@ function Success() {
 
         if (data.success) {
           if (reduxUser?.user?._id) {
-            dispatch(clearCartWithBackendSync({ userId: reduxUser.user._id }));
+            dispatch(clearCartWithBackendSync({ userId: reduxUser.user._id })); // Restore legacy usage
           } else {
             dispatch(clearCart({ userId: null }));
           }

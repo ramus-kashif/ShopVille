@@ -13,6 +13,10 @@ import {
 import { toast } from "react-toastify";
 import formatNumber from "format-number";
 import { useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";
+
+// Add socket initialization at the top level
+const socket = io('http://localhost:8080');
 
 function Dashboard() {
   const [stats, setStats] = useState({
@@ -26,10 +30,28 @@ function Dashboard() {
   });
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [adminJoined, setAdminJoined] = useState(false);
 
   useEffect(() => {
     fetchDashboardStats();
-  }, []);
+    socket.connect();
+    console.log('[SOCKET.IO] Admin dashboard connecting to socket...');
+    if (adminJoined) {
+      socket.emit('joinAdmin');
+      console.log('[SOCKET.IO] joinAdmin event emitted');
+    }
+    socket.on("connect", () => {
+      console.log('[SOCKET.IO] Connected to server:', socket.id);
+    });
+    socket.on("lowStock", (data) => {
+      console.log('[SOCKET.IO] lowStock event received:', data);
+      toast.warn(`Low stock alert: ${data.title} (Stock: ${data.stock})`, { autoClose: 5000 });
+    });
+    return () => {
+      socket.off("lowStock");
+      socket.disconnect();
+    };
+  }, [adminJoined]);
 
   const fetchDashboardStats = async () => {
     try {
@@ -115,6 +137,7 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

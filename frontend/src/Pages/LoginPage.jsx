@@ -67,6 +67,10 @@ export default function LoginPage() {
       .then((response) => {
         if (response?.success == true) {
           toast.success(response?.message, { autoClose: 2000 });
+          // Load user's cart after login
+          if (response?.user?._id) {
+            dispatch(loadUserCart({ userId: response.user._id }));
+          }
           setTimeout(() => {
             // Role-based redirect
             if (response?.user?.role === 1) {

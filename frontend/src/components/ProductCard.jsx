@@ -112,14 +112,14 @@ function ProductCard({ product }) {
                 </button>
               )
             ) : (
-              <button
-                onClick={handleAddToCart}
+            <button
+              onClick={handleAddToCart}
                 className="w-full bg-[#FF6B00] hover:bg-[#FF8C42] text-white py-2 px-3 rounded-lg font-semibold transition-all duration-200 shadow-lg flex items-center justify-center gap-1 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
-                disabled={stock === 0}
-              >
+              disabled={stock === 0}
+            >
                 <ShoppingCart className="w-4 h-4" />
                 Add to Cart
-              </button>
+            </button>
             )}
           </div>
         </div>

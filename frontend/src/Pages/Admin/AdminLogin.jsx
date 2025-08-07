@@ -34,7 +34,6 @@ export default function AdminLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus("loading");
-    
     try {
       const response = await axios.post(
         "http://localhost:8080/api/v1/users/admin/login",
@@ -44,22 +43,17 @@ export default function AdminLogin() {
           headers: { "Content-Type": "application/json" },
         }
       );
-      
       if (response?.data?.success) {
         toast.success(response?.data?.message, { autoClose: 2000 });
-        
         // Store user data in localStorage and update Redux state
         localStorage.setItem('user', JSON.stringify(response.data.user));
         localStorage.setItem('token', response.data.token);
-        
         // Update Redux state to reflect logged-in status
         dispatch(setUserFromPhoneRegistration(response.data.user));
-        
         // Load user's cart after successful login
         if (response.data.user._id) {
           dispatch(loadUserCart({ userId: response.data.user._id }));
         }
-        
         setTimeout(() => {
           navigate("/admin");
         }, 2000);

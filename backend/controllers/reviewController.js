@@ -6,13 +6,12 @@ import catchAsyncErrors from "../middlewares/error.js";
 
 // Create new review => /api/v1/review
 export const newReview = catchAsyncErrors(async (req, res, next) => {
-  const { rating, title, comment, productId } = req.body;
+  const { rating, comment, productId } = req.body;
 
   const review = {
     user: req.user._id,
     name: req.user.name,
     rating: Number(rating),
-    title,
     comment,
     productId,
   };

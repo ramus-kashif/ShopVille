@@ -375,12 +375,12 @@ function Shop() {
           {/* Products Grid */}
           {(showSearchResults || imageSearchMessage) ? null : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {products &&
-                Array.isArray(products.products) &&
-                products.products.map((product) => (
-                  <ProductCard key={product._id} product={product} />
-                ))}
-            </div>
+            {products &&
+              Array.isArray(products.products) &&
+              products.products.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+          </div>
           )}
 
           {/* No Products Message */}
