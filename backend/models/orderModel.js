@@ -13,7 +13,7 @@ const orderSchema = new mongoose.Schema(
         title: String,
         quantity: Number,
         price: Number,
-        pictureUrl: String, // Add this field to store product image URL
+        pictureUrl: String,
       },
     ],
     totalAmount: Number,
@@ -34,6 +34,13 @@ const orderSchema = new mongoose.Schema(
     },
     customerName: String,
     customerEmail: String,
+    shipmentAddress: {
+      name: String,
+      phone: String,
+      address: String,
+      city: String,
+      postalCode: String,
+    },
   },
   { timestamps: true }
 );

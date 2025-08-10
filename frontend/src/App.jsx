@@ -1,4 +1,5 @@
 import { Routes, Route, useLocation } from "react-router-dom";
+import ForgotPassword from "./Pages/ForgotPassword";
 import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { loadUserCart, initializeCart, fetchUserCart, updateCartPrices } from "./store/features/cart/cartSlice";
@@ -133,7 +134,9 @@ function App() {
     <>
       <ScrollToTop />
       {!hideNavbar && <Navbar />}
-      <Routes>
+      <div style={{ minHeight: '70vh', marginBottom: '40px' }}>
+        <Routes>
+  <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route
           path="/adminLogin"
           element={<AdminLogin />}
@@ -194,7 +197,8 @@ function App() {
           <Route path="orders" element={<Orders />} />
           <Route path="carousel" element={<Carousel />} />
         </Route>
-      </Routes>
+        </Routes>
+      </div>
       {!isAdmin && <Footer />}
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover />
     </>

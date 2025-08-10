@@ -12,6 +12,7 @@ const otpStore = {};
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
+export { otpStore };
 
 // Helper: Send email (using nodemailer, configure with your SMTP)
 async function sendEmailOtp(email, otp) {

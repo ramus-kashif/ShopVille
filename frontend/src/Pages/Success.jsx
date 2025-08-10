@@ -72,7 +72,7 @@ function Success() {
         
         console.log("10. Order data to send:", orderData);
 
-        const response = await fetch("http://localhost:8080/api/v1/orders/create-stripe-order", {
+  const response = await fetch("http://localhost:8080/api/v1/order/create-stripe-order", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(orderData),

@@ -61,7 +61,8 @@ function ProductCard({ product }) {
   const discountedPrice = discount > 0 ? price - Math.round((price * discount) / 100) : price;
 
   return (
-    <Link to={`/product/${_id}`} className="group">
+        <div className="group">
+          <Link to={`/product/${_id}`} className="block">
       <div className="bg-white rounded-lg shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-[#E0E0E0] hover:border-[#FF6B00]/30 transform hover:-translate-y-1 h-full flex flex-col">
         {/* Product Image */}
         <div className="relative aspect-square overflow-hidden bg-[#F8F9FA] rounded-t-lg">
@@ -83,10 +84,16 @@ function ProductCard({ product }) {
           
           {/* Quick Actions */}
           <div className="absolute top-3 right-3 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
-            <button className="w-8 h-8 bg-white/90 hover:bg-white backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 border border-[#E0E0E0]">
+              <button
+                className="w-8 h-8 bg-white/90 hover:bg-white backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 border border-[#E0E0E0]"
+                onClick={isInWishlist ? handleRemoveFromWishlist : handleAddToWishlist}
+              >
               <Heart className="w-4 h-4 text-[#FF6B00] hover:text-[#DC3545] transition-colors" />
             </button>
-            <button className="w-8 h-8 bg-white/90 hover:bg-white backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 border border-[#E0E0E0]">
+              <button
+                className="w-8 h-8 bg-white/90 hover:bg-white backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110 border border-[#E0E0E0]"
+                onClick={e => { e.preventDefault(); e.stopPropagation(); }}
+              >
               <Eye className="w-4 h-4 text-[#FF6B00] hover:text-[#FF6B00] transition-colors" />
             </button>
           </div>
@@ -181,7 +188,8 @@ function ProductCard({ product }) {
           </div>
         </div>
       </div>
-    </Link>
+          </Link>
+        </div>
   );
 }
 

@@ -17,6 +17,20 @@ import { login, setUserFromPhoneRegistration } from "../store/features/auth/auth
 import { loadUserCart } from "../store/features/cart/cartSlice";
 import { LogIn, Eye, EyeOff, Package, Shield, Truck, Mail, Phone } from "lucide-react";
 
+// Temp email domains
+const TEMP_EMAIL_DOMAINS = [
+  "mailinator.com", "tempmail.com", "10minutemail.com", "guerrillamail.com", "yopmail.com", "dispostable.com", "trashmail.com"
+];
+
+function isTempEmail(email) {
+  return TEMP_EMAIL_DOMAINS.some(domain => email.endsWith("@" + domain) || email.split("@")[1] === domain);
+}
+
+function isValidPassword(password) {
+  // At least 8 chars, 1 letter, 1 number, 1 symbol
+  return /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/.test(password);
+}
+
 // Phone number formatting utility
 const formatPhoneNumber = (value) => {
   // Remove all non-digits
@@ -62,6 +76,16 @@ export default function LoginPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Password validation
+    if (!isValidPassword(inputValues.password)) {
+      toast.error("Password must be 8+ chars, include letters, numbers, and symbols");
+      return;
+    }
+    // Temp email validation
+    if (isTempEmail(inputValues.email)) {
+      toast.error("Temporary emails are not allowed");
+      return;
+    }
     dispatch(login(inputValues))
       .unwrap()
       .then((response) => {
@@ -208,13 +232,12 @@ export default function LoginPage() {
         clearInterval(checkClosed);
         window.removeEventListener('message', messageHandler);
         popup.close();
-        
         // Handle successful Google login
         const { user } = event.data;
         toast.success('Successfully logged in with Google!');
-        
-        // Store user data and redirect
+        // Store user data and update Redux auth state
         localStorage.setItem('user', JSON.stringify(user));
+        dispatch(login(user));
         if (user.role === 1) {
           navigate("/admin");
         } else {

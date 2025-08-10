@@ -1,4 +1,20 @@
+// Get orders for a specific user
+export const getUserOrders = async (req, res) => {
+  try {
+    const userId = req.params.userId || req.query.userId;
+    console.log('[getUserOrders] userId:', userId);
+    if (!userId) return res.status(400).json({ success: false, message: "User ID required" });
+  const mongoose = (await import('mongoose')).default;
+  const orders = await Order.find({ customerId: new mongoose.Types.ObjectId(userId) }).sort({ createdAt: -1 });
+    console.log(`[getUserOrders] found ${orders.length} orders for userId ${userId}`);
+    res.status(200).json({ success: true, orders });
+  } catch (error) {
+    console.error('[getUserOrders] error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 // controllers/orderController.js
+import mongoose from "mongoose";
 import Order from "../models/orderModel.js";
 import Product from "../models/productsModel.js";
 import { io } from "../server.js";
@@ -6,7 +22,7 @@ import { io } from "../server.js";
 // Create order: Cash on Delivery
 export const createCashOnDeliveryOrder = async (req, res) => {
   try {
-    const { cartItems, totalAmount, paymentMethod, paymentStatus, customerEmail, customerName, customerId } = req.body;
+    const { cartItems, totalAmount, paymentMethod, paymentStatus, customerEmail, customerName, customerId, shipmentAddress } = req.body;
 
     const newOrder = new Order({
       cartItems,
@@ -16,6 +32,7 @@ export const createCashOnDeliveryOrder = async (req, res) => {
       customerEmail,
       customerName,
       customerId,
+      shipmentAddress,
     });
 
     await newOrder.save();
@@ -38,6 +55,7 @@ export const createStripeOrder = async (req, res) => {
       customerEmail,
       customerName,
       customerId,
+      shipmentAddress,
     } = req.body;
 
     console.log("2. Extracted data:", {
@@ -62,14 +80,15 @@ export const createStripeOrder = async (req, res) => {
 
     console.log("5. Creating order object...");
     const newOrder = new Order({
-      cartItems,
-      totalAmount,
-      stripeSessionId,
-      paymentStatus: "paid",
-      paymentMethod: "stripe",
-      customerEmail,
-      customerName,
-      customerId,
+  cartItems,
+  totalAmount,
+  stripeSessionId,
+  paymentStatus: "paid",
+  paymentMethod: "stripe",
+  customerEmail,
+  customerName,
+  customerId,
+  shipmentAddress,
     });
 
     console.log("6. Order object created:", newOrder);
@@ -100,7 +119,6 @@ export const updateStripeOrder = async (req, res) => {
         stripeSessionId,
         paymentStatus,
       },
-      { new: true }
     );
 
     if (!updatedOrder) {

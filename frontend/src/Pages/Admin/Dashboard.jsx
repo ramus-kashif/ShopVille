@@ -58,7 +58,7 @@ function Dashboard() {
       console.log("Fetching dashboard stats...");
       
       // Fetch orders for stats
-      const ordersResponse = await fetch("http://localhost:8080/api/v1/orders/all");
+  const ordersResponse = await fetch("http://localhost:8080/api/v1/order/all");
       console.log("Orders response status:", ordersResponse.status);
       const ordersData = await ordersResponse.json();
       console.log("Orders data:", ordersData);

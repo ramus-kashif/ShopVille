@@ -17,6 +17,20 @@ import { register, setUserFromPhoneRegistration } from "../store/features/auth/a
 import { loadUserCart } from "../store/features/cart/cartSlice";
 import { UserPlus, Eye, EyeOff, Package, Shield, Truck, Mail, Phone, CheckCircle } from "lucide-react";
 
+// Temp email domains
+const TEMP_EMAIL_DOMAINS = [
+  "mailinator.com", "tempmail.com", "10minutemail.com", "guerrillamail.com", "yopmail.com", "dispostable.com", "trashmail.com"
+];
+
+function isTempEmail(email) {
+  return TEMP_EMAIL_DOMAINS.some(domain => email.endsWith("@" + domain) || email.split("@")[1] === domain);
+}
+
+function isValidPassword(password) {
+  // At least 8 chars, 1 letter, 1 number, 1 symbol
+  return /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/.test(password);
+}
+
 // Phone number formatting utility
 const formatPhoneNumber = (value) => {
   // Remove all non-digits
@@ -64,6 +78,16 @@ export default function RegisterPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Password validation
+    if (!isValidPassword(inputValues.password)) {
+      toast.error("Password must be 8+ chars, include letters, numbers, and symbols");
+      return;
+    }
+    // Temp email validation
+    if (isTempEmail(inputValues.email)) {
+      toast.error("Temporary emails are not allowed");
+      return;
+    }
     dispatch(register(inputValues))
       .unwrap()
       .then((response) => {
@@ -122,7 +146,12 @@ export default function RegisterPage() {
   const handleOtpVerification = async (e) => {
     e.preventDefault();
     setOtpStatus('verifying');
-    
+    // Password validation
+    if (!isValidPassword(inputValues.password)) {
+      toast.error("Password must be 8+ chars, include letters, numbers, and symbols");
+      setOtpStatus('error');
+      return;
+    }
     try {
       const res = await fetch("http://localhost:8080/api/v1/auth/verify-otp", {
         method: "POST",
@@ -138,19 +167,15 @@ export default function RegisterPage() {
       if (data.success) {
         setOtpStatus('success');
         toast.success("Account created successfully!", { autoClose: 2000 });
-        
         // Automatically log the user in after successful registration
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('token', data.user.token);
-        
         // Update Redux state to reflect logged-in status
         dispatch(setUserFromPhoneRegistration(data.user));
-        
         // Load user's cart after successful registration
         if (data.user._id) {
           dispatch(loadUserCart({ userId: data.user._id }));
         }
-        
         setTimeout(() => {
           // Redirect based on role
           if (data.user.role === 1) {

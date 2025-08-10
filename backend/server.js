@@ -51,12 +51,14 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/categories", CategoriesRoutes);
 app.use("/api/v1/products", productsRoutes);
 app.use("/api/v1/payments", paymentRoutes);
-app.use("/api/v1/orders", orderRoutes);
+app.use("/api/v1/order", orderRoutes);
 app.use("/api/v1/carousel", carouselRoutes);
 app.use("/api/v1/image-search", imageSearchRoutes);
 app.use("/api/v1/reviews", reviewRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/cart", cartRoutes);
+import forgotPasswordRoutes from "./routes/forgotPasswordRoutes.js";
+app.use("/api/v1/auth/forgot-password", forgotPasswordRoutes);
 
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {

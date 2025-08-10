@@ -4,12 +4,11 @@ import Product from '../models/productsModel.js';
 // Get user's cart
 export const getCart = async (req, res) => {
   const userId = req.user._id;
-  let cart = await Cart.findOne({ userId }).populate('items.productId');
-  if (!cart) {
-    cart = new Cart({ userId, items: [] });
-    await cart.save();
-    cart = await Cart.findOne({ userId }).populate('items.productId');
-  }
+  let cart = await Cart.findOneAndUpdate(
+    { userId },
+    { $setOnInsert: { items: [] } },
+    { new: true, upsert: true }
+  ).populate('items.productId');
   res.json({ success: true, cart });
 };
 
@@ -46,8 +45,14 @@ export const addToCart = async (req, res) => {
 export const removeFromCart = async (req, res) => {
   const userId = req.user._id;
   const { productId } = req.body;
-  const cart = await Cart.findOne({ userId });
-  if (!cart) return res.json({ success: true });
+  let cart = await Cart.findOne({ userId });
+  if (!cart) {
+    cart = await Cart.findOneAndUpdate(
+      { userId },
+      { $setOnInsert: { items: [] } },
+      { new: true, upsert: true }
+    );
+  }
   cart.items = cart.items.filter(item => !item.productId.equals(productId));
   await cart.save();
   res.json({ success: true, cart });
@@ -56,6 +61,10 @@ export const removeFromCart = async (req, res) => {
 // Clear cart
 export const clearCart = async (req, res) => {
   const userId = req.user._id;
-  await Cart.findOneAndDelete({ userId });
-  res.json({ success: true });
-}; 
+  const cart = await Cart.findOneAndUpdate(
+    { userId },
+    { $set: { items: [] } },
+    { new: true }
+  );
+  res.json({ success: true, cart });
+};

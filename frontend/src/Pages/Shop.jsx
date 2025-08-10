@@ -227,7 +227,7 @@ function Shop() {
   }
 
   return (
-    <div className="min-h-screen bg-white relative">
+    <div className="min-h-screen bg-white pt-20 relative">
       {/* Overlay Navbar at the top of the carousel */}
       <Navbar />
       {/* Image Carousel */}

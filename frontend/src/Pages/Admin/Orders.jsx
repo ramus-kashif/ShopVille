@@ -15,7 +15,7 @@ function Orders() {
   const fetchOrders = async () => {
     try {
       console.log("Fetching orders from backend...");
-      const response = await fetch("http://localhost:8080/api/v1/orders/all");
+  const response = await fetch("http://localhost:8080/api/v1/order/all");
       console.log("Response status:", response.status);
       
       const data = await response.json();

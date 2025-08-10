@@ -6,7 +6,7 @@ function HomePage() {
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-[#FF6B00]/5 via-white to-[#FF6B00]/5 py-20">
-        <div className="container mx-auto px-4">
+  <div className="container mx-auto px-4 py-8 pt-20">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl lg:text-7xl font-bold text-[#1C1C1E] mb-6 leading-tight">
               Welcome to <span className="text-[#FF6B00]">ShopVille</span>

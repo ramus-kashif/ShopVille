@@ -1,13 +1,15 @@
 import express from "express";
+const router = express.Router();
 import {
   createCashOnDeliveryOrder,
   createStripeOrder,
   updateStripeOrder,
   getAllOrders,
+  getUserOrders,
 } from "../controllers/orderController.js";
-import { isAuthorized, isAdmin } from "../middlewares/authMiddleware.js";
 
-const router = express.Router();
+// Route to get orders for a specific user
+router.get("/user/:userId", getUserOrders);
 
 // Route to create Cash on Delivery order
 router.post("/create", createCashOnDeliveryOrder);

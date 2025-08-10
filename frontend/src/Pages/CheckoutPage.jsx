@@ -1,7 +1,7 @@
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import formatNumber from "format-number";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { toast } from "react-toastify";
 import { clearCart, clearCartWithBackendSync } from "@/store/features/cart/cartSlice";
@@ -14,6 +14,14 @@ export default function CheckoutPage() {
   const user = useSelector((state) => state.auth.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const [shipmentAddress, setShipmentAddress] = useState({
+    name: "",
+    phone: "",
+    address: "",
+    city: "",
+    postalCode: ""
+  });
 
   useEffect(() => {
     if (!cartItems.length) navigate("/cart");
@@ -35,10 +43,15 @@ export default function CheckoutPage() {
     return {};
   };
 
+  const handleAddressChange = (e) => {
+    const { name, value } = e.target;
+    setShipmentAddress(addr => ({ ...addr, [name]: value }));
+  };
+
   const handleCashOnDelivery = async () => {
     try {
       const userData = getUserData();
-      const res = await fetch("http://localhost:8080/api/v1/orders/create", {
+  const res = await fetch("http://localhost:8080/api/v1/order/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -49,6 +62,7 @@ export default function CheckoutPage() {
           customerEmail: userData.email || "guest@example.com",
           customerName: userData.name || "Guest",
           customerId: userData._id || null,
+          shipmentAddress,
         }),
       });
       const data = await res.json();
@@ -150,7 +164,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white pt-20">
+    <div className="min-h-screen bg-white pt-24">
       <div className="container mx-auto px-4 max-w-6xl">
         {/* Header */}
         <div className="text-center mb-8">
@@ -166,7 +180,6 @@ export default function CheckoutPage() {
                 <CheckCircle className="w-6 h-6 text-[#28A745]" />
                 Order Summary
               </h2>
-              
               <div className="space-y-4">
                 {cartItems.map((item, index) => (
                   <div
@@ -195,10 +208,39 @@ export default function CheckoutPage() {
               </div>
             </div>
 
+            {/* Shipment Address Form */}
+            <div className="bg-white rounded-2xl shadow-sm p-8 mb-6 border border-[#E0E0E0]">
+              <h2 className="text-2xl font-bold text-[#1C1C1E] mb-6 flex items-center gap-2">
+                <Truck className="w-6 h-6 text-[#FF6B00]" />
+                Shipment Address
+              </h2>
+              <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-[#1C1C1E] font-medium mb-2">Full Name</label>
+                  <input type="text" name="name" value={shipmentAddress.name} onChange={handleAddressChange} required className="w-full h-12 rounded-xl border-2 border-[#E0E0E0] px-4 mb-4" />
+                </div>
+                <div>
+                  <label className="block text-[#1C1C1E] font-medium mb-2">Phone</label>
+                  <input type="text" name="phone" value={shipmentAddress.phone} onChange={handleAddressChange} required className="w-full h-12 rounded-xl border-2 border-[#E0E0E0] px-4 mb-4" />
+                </div>
+                <div>
+                  <label className="block text-[#1C1C1E] font-medium mb-2">Address</label>
+                  <input type="text" name="address" value={shipmentAddress.address} onChange={handleAddressChange} required className="w-full h-12 rounded-xl border-2 border-[#E0E0E0] px-4 mb-4" />
+                </div>
+                <div>
+                  <label className="block text-[#1C1C1E] font-medium mb-2">City</label>
+                  <input type="text" name="city" value={shipmentAddress.city} onChange={handleAddressChange} required className="w-full h-12 rounded-xl border-2 border-[#E0E0E0] px-4 mb-4" />
+                </div>
+                <div>
+                  <label className="block text-[#1C1C1E] font-medium mb-2">Postal Code</label>
+                  <input type="text" name="postalCode" value={shipmentAddress.postalCode} onChange={handleAddressChange} required className="w-full h-12 rounded-xl border-2 border-[#E0E0E0] px-4 mb-4" />
+                </div>
+              </form>
+            </div>
+
             {/* Payment Methods */}
             <div className="bg-white rounded-2xl shadow-sm p-8 border border-[#E0E0E0]">
               <h2 className="text-2xl font-bold text-[#1C1C1E] mb-6">Payment Method</h2>
-              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Cash on Delivery */}
                 <div className="border-2 border-[#E0E0E0] rounded-xl p-6 hover:border-[#FF6B00]/50 transition-colors duration-200 cursor-pointer group bg-[#F8F9FA]">
